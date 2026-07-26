@@ -78,6 +78,7 @@ Derived from `DESIGN-BRIEF.md`, with the URL rule overridden by explicit user de
 - **Polish diacritics:** every font must load the `latin-ext` subset. Brief section 8.2 records that per-face coverage was never verified; `latin-ext` is the mechanism, Task 2 Step 4 is the verification.
 - **Node 24.17.0, npm 11.13.0** confirmed present.
 - **Branch:** all work lands on `migration/next-tailwind`, never on `main`.
+- **Every dependency version is pinned exactly. No `^`, no `~`, no ranges.** User decision, 2026-07-26, after an unpinned `typescript` resolved to 7.0.2 and broke `next build` on the `next.config.ts` loader. `.npmrc` sets `save-exact=true` so `npm install <pkg>` pins automatically; do not rely on remembering to strip the caret. If you add a dependency, verify `package.json` records a bare version like `"motion": "12.42.2"` before committing. If a pinned version turns out to be broken, report it as a concern with the failing output rather than widening the range.
 
 ---
 
@@ -352,21 +353,33 @@ Run: `npm run dev`, open `http://127.0.0.1:3000`, confirm the heading renders la
 
 **This must happen now, not in Task 15.** Task 6 moves `assets/logos/` to `public/logos/`, and the legacy `index.html` references `assets/logos/*`. After that move the legacy pages render with 22 broken images, so a baseline captured later is worthless and the migration loses its acceptance criterion. Nothing in Task 1 has touched the legacy files yet, so capture here.
 
+A plain `playwright screenshot` call is not sufficient and was already tried: it produced a baseline with roughly 60% of the page blank. Three conditions must hold at once, which is why this is a script rather than a command:
+
+1. **Reduced motion emulated.** The legacy `styles.css` hides every `.reveal` element at `opacity: 0` and clears it only from an IntersectionObserver callback, so an instant capture catches nothing revealed. The stylesheet's `@media (prefers-reduced-motion: reduce)` block forces them visible.
+2. **Scrolled to the bottom and back.** Partner logos use `loading="lazy"`; anything below the first viewport is never fetched for an instant capture, leaving empty cells in both logo grids.
+3. **Every image confirmed complete** before capturing, rather than trusting a fixed sleep.
+
+The script `scripts/capture-baseline.mjs` already exists in the repository and enforces all three, exiting non-zero if any `.reveal` element is still hidden.
+
 ```bash
-mkdir -p /tmp/hanna-baseline
 python3 -m http.server 8099 >/dev/null 2>&1 &
+SRV=$!
 sleep 2
-npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:8099/index.html /tmp/hanna-baseline/legacy-home.png
-npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:8099/poznaj-hanne.html /tmp/hanna-baseline/legacy-about.png
-npx playwright screenshot --full-page --viewport-size=390,844 \
-  http://127.0.0.1:8099/index.html /tmp/hanna-baseline/legacy-home-mobile.png
-kill %1
-ls -la /tmp/hanna-baseline/
+node scripts/capture-baseline.mjs
+kill $SRV
 ```
 
-Expected: three PNG files, each larger than 100 KB. Open `legacy-home.png` and confirm the partner logos are visible; if they are missing, the assets already moved and the baseline is invalid.
+Expected output, and all three lines must read `OK`:
+
+```
+  OK   legacy-home          1440px  images=40  reveals visible=19/19
+  OK   legacy-about         1440px  images=0   reveals visible=9/9
+  OK   legacy-home-mobile    390px  images=40  reveals visible=19/19
+```
+
+`images=40` is correct for the home page: 22 unique logos plus 18 marquee duplicates. `images=0` is correct for the advisor page, which has no images. A `FAIL` line means the baseline understates the page and must not be used for the Task 15 parity check.
+
+One known and acceptable artifact: the Leadenhall cell in the insurance grid appears empty. That logo is light-colored on transparency and effectively invisible under the legacy `grayscale opacity-70` treatment. It is a property of the source asset, reproduces identically in the migrated version, and therefore does not affect parity.
 
 - [ ] **Step 10: Commit**
 
