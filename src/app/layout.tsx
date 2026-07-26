@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import { DM_Sans, Manrope, Playfair_Display } from 'next/font/google';
+import SiteFooter from '@/components/SiteFooter';
+import SiteHeader from '@/components/SiteHeader';
+import SkipLink from '@/components/SkipLink';
 import './globals.css';
 
 // The latin-ext subset is required for Polish diacritics
@@ -35,11 +38,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    // The font variables belong on <html>, not <body>: @theme reads them at the
+    // root. Verified in Task 2; the plan's Task 4 Step 5 snippet is stale.
     <html
       lang="pl"
       className={`${dmSans.variable} ${playfair.variable} ${manrope.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <SkipLink />
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }

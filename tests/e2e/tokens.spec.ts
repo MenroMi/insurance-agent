@@ -50,7 +50,10 @@ test('focus-visible produces a visible outline', async ({ page }) => {
     a.href = '#top';
     a.id = 'probe';
     a.textContent = 'probe';
-    document.body.append(a);
+    // Prepended, not appended: since Task 4 the shell puts a skip link, a
+    // header and a footer on the page, so "append + one Tab" would focus the
+    // skip link instead. First child is the first tab stop, whatever follows.
+    document.body.prepend(a);
   });
   await page.keyboard.press('Tab');
   const outlineWidth = await page

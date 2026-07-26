@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Colors: copied from DESIGN-BRIEF.md section 3 */
@@ -15,6 +15,16 @@
   --color-surface: #ffffff;
   --color-surface-soft: #edf3f8;
   --color-surface-blue: #eaf4fb;
+
+  /*
+   * Footer palette, carried over from styles.css lines 701-729. The brief's
+   * section 3 palette never listed these four, so they arrive as tokens rather
+   * than as raw hex in SiteFooter.tsx; the design phase edits them here.
+   */
+  --color-footer: #132f48;
+  --color-footer-muted: #8fa8ba;
+  --color-footer-link: #bed0dd;
+  --color-footer-faint: #7893a6;
 
   /*
    * DEFERRED DEBT, must be revisited before launch.
@@ -79,7 +89,9 @@
   }
 
   /* Retire item 20: no orphans in the long Polish headlines */
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     text-wrap: balance;
   }
 
