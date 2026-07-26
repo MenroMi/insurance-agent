@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Edytory
+.vscode/
+.idea/
+*.swp
+*~
+
+# Zapisane strony z przeglądarki
+*_files/
+* - YouTube.html
+
+# Logi i pliki tymczasowe
+*.log
+node_modules/
