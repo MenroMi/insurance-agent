@@ -8,7 +8,8 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "format": "npx prettier --write \"./src/**/*.{jsx,ts,tsx}\""
   },
   "keywords": [],
   "author": "",
