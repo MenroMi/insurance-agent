@@ -124,12 +124,11 @@ src/                            everything the app imports; @/* resolves here
     partners.ts                 13 insurance + 9 bank + marquee subset
     benefits.ts                 4 benefit cards
     site.ts                     site name, description, base URL
-  lib/
-    assertNoEmDash.ts           shared guard used by content tests
 
 public/                         MUST stay at the repo root, not under src/
   logos/                        22 files, git mv from assets/logos
 tests/                          not app source, so kept out of src/
+  helpers/dashGuard.ts          shared guard used by content tests
   unit/                         Vitest + RTL
   e2e/regression-guard.spec.ts  Playwright, encodes the brief's regression guard
 
@@ -668,7 +667,7 @@ git commit -m "feat: add Tailwind v4 theme tokens and self-hosted fonts"
 This is where Global Constraint "zero em-dashes" becomes mechanically enforced instead of hoped for.
 
 **Files:**
-- Create: `src/lib/assertNoEmDash.ts`, `src/content/site.ts`, `src/content/nav.ts`, `src/content/contact.ts`, `src/content/services.ts`, `src/content/journey.ts`, `src/content/partners.ts`, `src/content/benefits.ts`
+- Create: `tests/helpers/dashGuard.ts`, `src/content/site.ts`, `src/content/nav.ts`, `src/content/contact.ts`, `src/content/services.ts`, `src/content/journey.ts`, `src/content/partners.ts`, `src/content/benefits.ts`
 - Test: `tests/unit/content.test.ts`
 
 **Interfaces:**
@@ -686,7 +685,8 @@ This is where Global Constraint "zero em-dashes" becomes mechanically enforced i
 
 - [ ] **Step 1: Write the dash guard**
 
-`src/lib/assertNoEmDash.ts`:
+`tests/helpers/dashGuard.ts`. It lives under `tests/` rather than `src/lib/` because nothing
+in the application ever imports it; only the content test does. User decision, 2026-07-26.
 
 ```ts
 /** Collects every string from an arbitrarily nested data structure. */
@@ -711,7 +711,7 @@ export function findDashViolations(strings: string[]): string[] {
 
 ```ts
 import { describe, expect, it } from "vitest";
-import { collectStrings, findDashViolations } from "@/lib/assertNoEmDash";
+import { collectStrings, findDashViolations } from "../helpers/dashGuard";
 import { navItems } from "@/content/nav";
 import { services } from "@/content/services";
 import { journeySteps } from "@/content/journey";

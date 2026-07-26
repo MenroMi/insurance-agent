@@ -1,11 +1,11 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
 test("theme tokens resolve to the brief's values", async ({ page }) => {
-  await page.goto("/");
-  const body = page.locator("body");
+  await page.goto('/');
+  const body = page.locator('body');
 
-  await expect(body).toHaveCSS("background-color", "rgb(247, 249, 252)"); // --color-page
-  await expect(body).toHaveCSS("color", "rgb(29, 42, 57)"); // --color-ink
+  await expect(body).toHaveCSS('background-color', 'rgb(247, 249, 252)'); // --color-page
+  await expect(body).toHaveCSS('color', 'rgb(29, 42, 57)'); // --color-ink
 });
 
 // Tailwind v4 resolves many utilities from dynamic scales. When a value is NOT
@@ -13,22 +13,22 @@ test("theme tokens resolve to the brief's values", async ({ page }) => {
 // unit test, just silently missing styling. The plan leans on unusual values
 // (mt-17, gap-10.5, pt-25, py-26, p-9.5, opacity-36, z-80, z-100), so probe one
 // representative per family before writing 2000 lines that depend on them.
-test("unusual utility values actually emit CSS", async ({ page }) => {
-  await page.goto("/");
+test('unusual utility values actually emit CSS', async ({ page }) => {
+  await page.goto('/');
   const probes = [
-    { cls: "mt-17", prop: "marginTop", expect: "68px" },
-    { cls: "gap-10.5", prop: "rowGap", expect: "42px" },
-    { cls: "py-26", prop: "paddingTop", expect: "104px" },
-    { cls: "p-9.5", prop: "paddingTop", expect: "38px" },
-    { cls: "opacity-36", prop: "opacity", expect: "0.36" },
-    { cls: "z-80", prop: "zIndex", expect: "80" },
+    { cls: 'mt-17', prop: 'marginTop', expect: '68px' },
+    { cls: 'gap-10.5', prop: 'rowGap', expect: '42px' },
+    { cls: 'py-26', prop: 'paddingTop', expect: '104px' },
+    { cls: 'p-9.5', prop: 'paddingTop', expect: '38px' },
+    { cls: 'opacity-36', prop: 'opacity', expect: '0.36' },
+    { cls: 'z-80', prop: 'zIndex', expect: '80' },
   ];
 
   const results = await page.evaluate((list) => {
     return list.map(({ cls, prop }) => {
-      const el = document.createElement("div");
+      const el = document.createElement('div');
       el.className = cls;
-      el.style.position = "relative";
+      el.style.position = 'relative';
       document.body.append(el);
       const value = getComputedStyle(el)[prop as never] as string;
       el.remove();
@@ -40,21 +40,21 @@ test("unusual utility values actually emit CSS", async ({ page }) => {
     .filter((r, i) => r.value !== probes[i].expect)
     .map((r, i) => `${r.cls}: got ${r.value}, expected ${probes[i].expect}`);
 
-  expect(failures, failures.join("; ")).toEqual([]);
+  expect(failures, failures.join('; ')).toEqual([]);
 });
 
-test("focus-visible produces a visible outline", async ({ page }) => {
-  await page.goto("/");
+test('focus-visible produces a visible outline', async ({ page }) => {
+  await page.goto('/');
   await page.evaluate(() => {
-    const a = document.createElement("a");
-    a.href = "#top";
-    a.id = "probe";
-    a.textContent = "probe";
+    const a = document.createElement('a');
+    a.href = '#top';
+    a.id = 'probe';
+    a.textContent = 'probe';
     document.body.append(a);
   });
-  await page.keyboard.press("Tab");
+  await page.keyboard.press('Tab');
   const outlineWidth = await page
-    .locator("#probe")
+    .locator('#probe')
     .evaluate((el) => getComputedStyle(el).outlineWidth);
-  expect(outlineWidth).toBe("2px");
+  expect(outlineWidth).toBe('2px');
 });
