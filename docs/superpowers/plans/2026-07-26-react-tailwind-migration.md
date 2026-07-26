@@ -4,7 +4,7 @@
 
 **Goal:** Port the existing 2-page vanilla HTML/CSS site to Next.js + Tailwind v4 with byte-faithful content, unchanged IA, and the cheap correctness/a11y/legal wins folded in, producing a verified baseline for the design phase.
 
-**Architecture:** Next.js 15 App Router, statically rendered. All page copy moves out of markup into typed modules under `content/`, so duplication (contact placeholders, the repeated 17/9/1 figures) becomes visible and single-sourced. Design tokens from `DESIGN-BRIEF.md` section 3 land in a Tailwind v4 `@theme` block. The migration is deliberately **visually faithful**: same fonts, same palette, same composition. That is what makes it verifiable. Aesthetic change happens afterwards, on a green baseline.
+**Architecture:** Next.js 15 App Router, statically rendered. All page copy moves out of markup into typed modules under `src/content/`, so duplication (contact placeholders, the repeated 17/9/1 figures) becomes visible and single-sourced. Design tokens from `DESIGN-BRIEF.md` section 3 land in a Tailwind v4 `@theme` block. The migration is deliberately **visually faithful**: same fonts, same palette, same composition. That is what makes it verifiable. Aesthetic change happens afterwards, on a green baseline.
 
 **Tech Stack:** Next.js 15 (App Router, TypeScript), Tailwind v4 via `@tailwindcss/postcss`, `motion` (`motion/react`), `@phosphor-icons/react` 2.1.10, `next/font/google`, Vitest + React Testing Library (component behavior), Playwright (regression guard).
 
@@ -12,9 +12,15 @@
 
 Two decisions, recorded explicitly because they are choices rather than framework requirements.
 
-**What Next.js actually mandates:** the routing conventions inside `app/` (folder name equals URL segment; the reserved files `page.tsx`, `layout.tsx`, `not-found.tsx`, `sitemap.ts`, `robots.ts`, `icon.svg`) and the Server/Client boundary. Nothing else. The `content/`, `lib/` and `components/` folders are this project's invention.
+**What Next.js actually mandates:** the routing conventions inside `src/app/` (folder name equals URL segment; the reserved files `page.tsx`, `layout.tsx`, `not-found.tsx`, `sitemap.ts`, `robots.ts`, `icon.svg`) and the Server/Client boundary. Nothing else. The `src/content/`, `src/lib/` and `src/components/` folders are this project's invention.
 
-**Decision 1, file layout: hybrid colocation.** Shared building blocks live in top-level `components/`. Anything used by exactly one route lives next to that route in `app/<route>/_components/`. The leading underscore is a Next convention that opts the folder out of routing. The point is that the folder a component sits in tells you whether it is safe to change: touching `app/_components/Hero.tsx` cannot affect `/about-me`, and touching `components/Reveal.tsx` can affect everything.
+**Decision 1, file layout: `src/` root plus hybrid colocation.** Chosen by the user on 2026-07-26.
+
+Application code lives under `src/`, which keeps it separate from repository furniture (`DESIGN-BRIEF.md`, `docs/`, config files, the legacy site until Task 15 removes it). Next.js supports `src/app` as a first-class alternative to a root-level `app/`; `public/` is the exception and must stay at the root.
+
+Within `src/`, shared building blocks live in `src/components/`. Anything used by exactly one route lives next to that route in `src/app/<route>/_components/`. The leading underscore is a Next convention that opts the folder out of routing. The point is that the folder a component sits in tells you whether it is safe to change: touching `src/app/_components/Hero.tsx` cannot affect `/about-me`, and touching `src/components/Reveal.tsx` can affect everything.
+
+Note that `@/*` maps to `./src/*`, so alias imports carry no `src` segment: the file at `src/app/_components/Hero.tsx` is imported as `@/app/_components/Hero`. Both `tsconfig.json` and `vitest.config.ts` must agree on that mapping.
 
 **Decision 2, the Server/Client boundary.** Server Components by default. `"use client"` appears only on the smallest possible leaf that genuinely needs browser APIs, and server-rendered markup reaches those leaves as `children`.
 
@@ -22,9 +28,9 @@ Only three files in this plan carry `"use client"`:
 
 | Client leaf | Why it must be | What stays on the server |
 |---|---|---|
-| `components/SiteHeader.tsx` | `useState` for the mobile menu, `usePathname` for the active link | nothing; the header is small |
-| `components/Reveal.tsx` | `useInView` plus a post-hydration mount flag | **all of its `children`**, which is why the no-JavaScript test in Task 14 can pass |
-| `app/_components/JourneyTrack.tsx` | `useScroll` and `useSpring` for the progress bar | the five step cards, passed in as `children` |
+| `src/components/SiteHeader.tsx` | `useState` for the mobile menu, `usePathname` for the active link | nothing; the header is small |
+| `src/components/Reveal.tsx` | `useInView` plus a post-hydration mount flag | **all of its `children`**, which is why the no-JavaScript test in Task 14 can pass |
+| `src/app/_components/JourneyTrack.tsx` | `useScroll` and `useSpring` for the progress bar | the five step cards, passed in as `children` |
 
 A Client Component cannot import a Server Component, but it can receive server-rendered JSX through props. That single fact is what keeps the client bundle to a menu toggle, a viewport observer and a scroll spring.
 
@@ -80,52 +86,59 @@ Derived from `DESIGN-BRIEF.md`, with the URL rule overridden by explicit user de
 `[c]` marks a Client Component. Everything unmarked is a Server Component.
 
 ```
-app/
-  layout.tsx                    root html/body, fonts, metadata base, shell
-  page.tsx                      Strona główna, composes the home sections
-  globals.css                   Tailwind import + @theme tokens + base layer
-  not-found.tsx                 custom 404 (retire item 28)
-  sitemap.ts                    generated sitemap
-  robots.ts                     generated robots.txt
-  icon.svg                      favicon monogram
-  _components/                  used only by the home route
-    Hero.tsx
-    PartnerMarquee.tsx          sibling of Hero, not child (retire item 7)
-    Journey.tsx                 wraps its steps in JourneyTrack
-    JourneyTrack.tsx      [c]   useScroll progress, steps arrive as children
-    Services.tsx                Phosphor icons via the /ssr entry
-    Partners.tsx                two logo grids
-    Consultation.tsx            Lendi placeholder slot
-  about-me/
-    page.tsx                    advisor page
-    _components/                used only by this route
-      AboutHero.tsx
-      AboutWorking.tsx
-  privacy-policy/
-    page.tsx                    legal placeholder (retire item 26)
-components/                     shared across routes
-  SiteHeader.tsx          [c]   nav toggle, active link
-  SiteFooter.tsx
-  SkipLink.tsx
-  Reveal.tsx              [c]   scroll reveal, children stay server-rendered
-content/
-  nav.ts                        nav items, single source for labels
-  contact.ts                    phone/email/location, single source
-  services.ts                   6 service entries
-  journey.ts                    5 journey steps
-  partners.ts                   13 insurance + 9 bank + marquee subset
-  benefits.ts                   4 benefit cards
-  site.ts                       site name, description, base URL
-lib/
-  assertNoEmDash.ts             shared guard used by content tests
-public/
+src/                            everything the app imports; @/* resolves here
+  app/
+    layout.tsx                  root html/body, fonts, metadata base, shell
+    page.tsx                    Strona główna, composes the home sections
+    globals.css                 Tailwind import + @theme tokens + base layer
+    not-found.tsx               custom 404 (retire item 28)
+    sitemap.ts                  generated sitemap
+    robots.ts                   generated robots.txt
+    icon.svg                    favicon monogram
+    _components/                used only by the home route
+      Hero.tsx
+      PartnerMarquee.tsx        sibling of Hero, not child (retire item 7)
+      Journey.tsx               wraps its steps in JourneyTrack
+      JourneyTrack.tsx    [c]   useScroll progress, steps arrive as children
+      Services.tsx              Phosphor icons via the /ssr entry
+      Partners.tsx              two logo grids
+      Consultation.tsx          Lendi placeholder slot
+    about-me/
+      page.tsx                  advisor page
+      _components/              used only by this route
+        AboutHero.tsx
+        AboutWorking.tsx
+    privacy-policy/
+      page.tsx                  legal placeholder (retire item 26)
+  components/                   shared across routes
+    SiteHeader.tsx        [c]   nav toggle, active link
+    SiteFooter.tsx
+    SkipLink.tsx
+    Reveal.tsx            [c]   scroll reveal, children stay server-rendered
+  content/
+    nav.ts                      nav items, single source for labels
+    contact.ts                  phone/email/location, single source
+    services.ts                 6 service entries
+    journey.ts                  5 journey steps
+    partners.ts                 13 insurance + 9 bank + marquee subset
+    benefits.ts                 4 benefit cards
+    site.ts                     site name, description, base URL
+  lib/
+    assertNoEmDash.ts           shared guard used by content tests
+
+public/                         MUST stay at the repo root, not under src/
   logos/                        22 files, git mv from assets/logos
-tests/
+tests/                          not app source, so kept out of src/
   unit/                         Vitest + RTL
   e2e/regression-guard.spec.ts  Playwright, encodes the brief's regression guard
+
+next.config.ts  tsconfig.json  postcss.config.mjs                 root
+vitest.config.ts  playwright.config.ts  package.json              root
 ```
 
-Split rationale: content modules are separated from presentation because the brief's deferred design work will rewrite every component while leaving copy untouched. Route-specific components sit beside their route so the folder itself records the blast radius of a change; only genuinely shared pieces earn a place in top-level `components/`.
+Two placement rules that are not preferences: Next.js requires `public/` at the project root, so it does not move under `src/`. And `@/*` maps to `./src/*` in both `tsconfig.json` and `vitest.config.ts`; if those two disagree, imports resolve in the editor and fail in tests.
+
+Split rationale: content modules are separated from presentation because the brief's deferred design work will rewrite every component while leaving copy untouched. Route-specific components sit beside their route so the folder itself records the blast radius of a change; only genuinely shared pieces earn a place in top-level `src/components/`.
 
 **Testing split:** Vitest + RTL covers client components and content invariants. Page-level and cross-cutting assertions go to Playwright, because async server components are awkward to render in jsdom. Do not fight that boundary.
 
@@ -136,7 +149,7 @@ Split rationale: content modules are separated from presentation because the bri
 Scaffolded by hand rather than `create-next-app`, because the directory is non-empty (the legacy site and git history stay in place until Task 15) and `create-next-app` aborts on conflicts.
 
 **Files:**
-- Create: `package.json`, `next.config.ts`, `tsconfig.json`, `postcss.config.mjs`, `vitest.config.ts`, `tests/setup.ts`, `app/layout.tsx`, `app/page.tsx`, `app/globals.css`, `.gitignore` (modify)
+- Create: `package.json`, `next.config.ts`, `tsconfig.json`, `postcss.config.mjs`, `vitest.config.ts`, `tests/setup.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `.gitignore` (modify)
 - Test: `tests/unit/smoke.test.tsx`
 
 **Interfaces:**
@@ -195,7 +208,7 @@ Replace the `scripts` block in `package.json` with:
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./*"] }
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
@@ -240,7 +253,9 @@ export default defineConfig({
     globals: true,
   },
   resolve: {
-    alias: { "@": path.resolve(__dirname, ".") },
+    // Must match tsconfig's "@/*": ["./src/*"] or imports resolve in the
+    // editor but fail in tests.
+    alias: { "@": path.resolve(__dirname, "./src") },
   },
 });
 ```
@@ -269,13 +284,13 @@ next-env.d.ts
 
 - [ ] **Step 5: Write the minimal app shell**
 
-`app/globals.css`:
+`src/app/globals.css`:
 
 ```css
 @import "tailwindcss";
 ```
 
-`app/layout.tsx`:
+`src/app/layout.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -294,7 +309,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-`app/page.tsx`:
+`src/app/page.tsx`:
 
 ```tsx
 export default function HomePage() {
@@ -367,7 +382,7 @@ The baseline PNGs live in `/tmp` deliberately: they are throwaway verification a
 ### Task 2: Design tokens and fonts
 
 **Files:**
-- Modify: `app/globals.css`, `app/layout.tsx`
+- Modify: `src/app/globals.css`, `src/app/layout.tsx`
 - Create: `tests/e2e/tokens.spec.ts`
 
 **Interfaces:**
@@ -378,7 +393,7 @@ Token values are copied from `DESIGN-BRIEF.md` section 3. The name `ink` is used
 
 - [ ] **Step 1: Write the `@theme` block**
 
-Replace `app/globals.css` entirely:
+Replace `src/app/globals.css` entirely:
 
 ```css
 @import "tailwindcss";
@@ -464,7 +479,7 @@ Replace `app/globals.css` entirely:
 
 - [ ] **Step 2: Wire the fonts through `next/font`**
 
-Replace `app/layout.tsx`:
+Replace `src/app/layout.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -624,7 +639,7 @@ git commit -m "feat: add Tailwind v4 theme tokens and self-hosted fonts"
 This is where Global Constraint "zero em-dashes" becomes mechanically enforced instead of hoped for.
 
 **Files:**
-- Create: `lib/assertNoEmDash.ts`, `content/site.ts`, `content/nav.ts`, `content/contact.ts`, `content/services.ts`, `content/journey.ts`, `content/partners.ts`, `content/benefits.ts`
+- Create: `src/lib/assertNoEmDash.ts`, `src/content/site.ts`, `src/content/nav.ts`, `src/content/contact.ts`, `src/content/services.ts`, `src/content/journey.ts`, `src/content/partners.ts`, `src/content/benefits.ts`
 - Test: `tests/unit/content.test.ts`
 
 **Interfaces:**
@@ -642,7 +657,7 @@ This is where Global Constraint "zero em-dashes" becomes mechanically enforced i
 
 - [ ] **Step 1: Write the dash guard**
 
-`lib/assertNoEmDash.ts`:
+`src/lib/assertNoEmDash.ts`:
 
 ```ts
 /** Collects every string from an arbitrarily nested data structure. */
@@ -733,7 +748,7 @@ Expected: FAIL, cannot resolve `@/content/nav` and siblings.
 
 - [ ] **Step 4: Write the content modules**
 
-`content/site.ts`:
+`src/content/site.ts`:
 
 ```ts
 export const site = {
@@ -747,7 +762,7 @@ export const site = {
 
 `baseUrl` is a deliberate placeholder; Task 13 Step 5 records it as blocked on the real domain.
 
-`content/nav.ts`:
+`src/content/nav.ts`:
 
 ```ts
 export const navItems = [
@@ -759,7 +774,7 @@ export const navItems = [
 ] as const;
 ```
 
-`content/contact.ts`:
+`src/content/contact.ts`:
 
 ```ts
 /**
@@ -775,7 +790,7 @@ export const contact = {
 } as const;
 ```
 
-`content/services.ts`:
+`src/content/services.ts`:
 
 ```ts
 export type ServiceIconName =
@@ -831,7 +846,7 @@ export const services = [
 }>;
 ```
 
-`content/journey.ts`:
+`src/content/journey.ts`:
 
 ```ts
 export const journeySteps = [
@@ -875,7 +890,7 @@ export const journeySteps = [
 
 Note on step 5's `body`: the legacy string was `"Możesz wrócić z pytaniami również później — przy zmianie sytuacji lub potrzeb."` The em-dash is replaced with a comma per Global Constraints. This is one of the 9 dash sites.
 
-`content/partners.ts`:
+`src/content/partners.ts`:
 
 ```ts
 export const insurancePartners = [
@@ -922,7 +937,7 @@ export const marqueePartners = [
 
 The three raster extensions are deliberate; the earlier cleanup pass corrected these paths after they pointed at non-existent `.svg` files.
 
-`content/benefits.ts`:
+`src/content/benefits.ts`:
 
 ```ts
 export const benefits = [
@@ -958,8 +973,8 @@ git commit -m "feat: extract page content into typed modules with a dash guard"
 ### Task 4: Layout shell, skip link, header and footer
 
 **Files:**
-- Modify: `app/layout.tsx`
-- Create: `components/SkipLink.tsx`, `components/SiteHeader.tsx`, `components/SiteFooter.tsx`
+- Modify: `src/app/layout.tsx`
+- Create: `src/components/SkipLink.tsx`, `src/components/SiteHeader.tsx`, `src/components/SiteFooter.tsx`
 - Test: `tests/unit/site-header.test.tsx`
 
 **Interfaces:**
@@ -1017,7 +1032,7 @@ Expected: FAIL, cannot resolve `@/components/SiteHeader`.
 
 - [ ] **Step 3: Write the three components**
 
-`components/SkipLink.tsx` (retire item 18):
+`src/components/SkipLink.tsx` (retire item 18):
 
 ```tsx
 export default function SkipLink() {
@@ -1032,7 +1047,7 @@ export default function SkipLink() {
 }
 ```
 
-`components/SiteHeader.tsx`:
+`src/components/SiteHeader.tsx`:
 
 ```tsx
 "use client";
@@ -1103,7 +1118,7 @@ export default function SiteHeader() {
 }
 ```
 
-`components/SiteFooter.tsx` (includes retire item 26, legal links):
+`src/components/SiteFooter.tsx` (includes retire item 26, legal links):
 
 ```tsx
 import Link from "next/link";
@@ -1168,7 +1183,7 @@ Expected: 2 passed.
 
 - [ ] **Step 5: Mount the shell in the root layout**
 
-In `app/layout.tsx`, replace the `<body>` children with:
+In `src/app/layout.tsx`, replace the `<body>` children with:
 
 ```tsx
       <body
@@ -1208,7 +1223,7 @@ git commit -m "feat: add layout shell with skip link, header and footer"
 Replaces the legacy `IntersectionObserver` plus `.reveal { opacity: 0 }` pattern. Fixes the brief's section 9 item "content is invisible without JS" and implements reduced motion as "degrade to static" rather than zeroed durations.
 
 **Files:**
-- Create: `components/Reveal.tsx`
+- Create: `src/components/Reveal.tsx`
 - Test: `tests/unit/reveal.test.tsx`
 
 **Interfaces:**
@@ -1256,7 +1271,7 @@ Expected: FAIL, cannot resolve `@/components/Reveal`.
 
 - [ ] **Step 3: Write the component**
 
-`components/Reveal.tsx`:
+`src/components/Reveal.tsx`:
 
 ```tsx
 "use client";
@@ -1323,8 +1338,8 @@ The marquee becomes a sibling of the hero rather than a child, which is retire i
 
 **Files:**
 - Move: `assets/logos/*` to `public/logos/*` (22 files)
-- Create: `app/_components/Hero.tsx`, `app/_components/PartnerMarquee.tsx`
-- Modify: `app/page.tsx`, `app/globals.css`
+- Create: `src/app/_components/Hero.tsx`, `src/app/_components/PartnerMarquee.tsx`
+- Modify: `src/app/page.tsx`, `src/app/globals.css`
 - Test: `tests/e2e/logos.spec.ts`
 
 **Interfaces:**
@@ -1344,7 +1359,7 @@ Expected output: `22`
 
 - [ ] **Step 2: Add the marquee keyframes to the theme**
 
-Append inside the existing `@theme` block in `app/globals.css`:
+Append inside the existing `@theme` block in `src/app/globals.css`:
 
 ```css
   --animate-marquee: marquee 26s linear infinite;
@@ -1362,7 +1377,7 @@ And append at the end of the file, outside any layer:
 
 - [ ] **Step 3: Write Hero**
 
-`app/_components/Hero.tsx`:
+`src/app/_components/Hero.tsx`:
 
 ```tsx
 import { contact } from "@/content/contact";
@@ -1456,7 +1471,7 @@ Two Global Constraint edits applied here: the hero lead's em-dash became a comma
 
 - [ ] **Step 4: Write PartnerMarquee**
 
-`app/_components/PartnerMarquee.tsx`:
+`src/app/_components/PartnerMarquee.tsx`:
 
 ```tsx
 import { marqueePartners } from "@/content/partners";
@@ -1502,7 +1517,7 @@ Every marquee logo is `aria-hidden` because the accessible list of partners is t
 
 - [ ] **Step 5: Compose the page**
 
-`app/page.tsx`:
+`src/app/page.tsx`:
 
 ```tsx
 import Hero from "@/app/_components/Hero";
@@ -1524,7 +1539,7 @@ export default function HomePage() {
 
 ```ts
 import { expect, test } from "@playwright/test";
-import { bankPartners, insurancePartners, marqueePartners } from "../../content/partners";
+import { bankPartners, insurancePartners, marqueePartners } from "../../src/content/partners";
 
 test("every logo file resolves with HTTP 200", async ({ request }) => {
   const files = new Set<string>([
@@ -1553,7 +1568,7 @@ test("the marquee lives outside the hero section", async ({ page }) => {
 - [ ] **Step 7: Run the tests**
 
 Run: `npm run test:e2e -- logos.spec.ts`
-Expected: 2 passed. A 404 means a filename in `content/partners.ts` disagrees with `public/logos/`.
+Expected: 2 passed. A 404 means a filename in `src/content/partners.ts` disagrees with `public/logos/`.
 
 - [ ] **Step 8: Commit**
 
@@ -1569,8 +1584,8 @@ git commit -m "feat: port hero, move logos to public, lift marquee out of the he
 The progress indicator moves from animated `height` to `transform: scaleY()`, which is retire item 25.
 
 **Files:**
-- Create: `app/_components/Journey.tsx`, `app/_components/JourneyTrack.tsx`
-- Modify: `app/page.tsx`
+- Create: `src/app/_components/Journey.tsx`, `src/app/_components/JourneyTrack.tsx`
+- Modify: `src/app/page.tsx`
 - Test: `tests/unit/journey-track.test.tsx`
 
 **Interfaces:**
@@ -1634,7 +1649,7 @@ Expected: FAIL, cannot resolve `@/app/_components/JourneyTrack`.
 
 This is the only part of the section that needs the browser. The step cards arrive as server-rendered `children`.
 
-`app/_components/JourneyTrack.tsx`:
+`src/app/_components/JourneyTrack.tsx`:
 
 ```tsx
 "use client";
@@ -1677,7 +1692,7 @@ export default function JourneyTrack({ children }: { children: React.ReactNode }
 
 No `"use client"` here. The five step cards, the sticky column and the benefits strip all stay on the server.
 
-`app/_components/Journey.tsx`:
+`src/app/_components/Journey.tsx`:
 
 ```tsx
 import JourneyTrack from "@/app/_components/JourneyTrack";
@@ -1774,7 +1789,7 @@ Expected: 2 passed.
 
 - [ ] **Step 6: Add Journey to the page**
 
-In `app/page.tsx`, add the import and render `<Journey />` after `<PartnerMarquee />`:
+In `src/app/page.tsx`, add the import and render `<Journey />` after `<PartnerMarquee />`:
 
 ```tsx
 import Hero from "@/app/_components/Hero";
@@ -1806,8 +1821,8 @@ git commit -m "feat: port journey timeline with a transform-driven progress leaf
 Retire item 10: the six emoji become icon-library glyphs.
 
 **Files:**
-- Create: `app/_components/Services.tsx`
-- Modify: `app/page.tsx`
+- Create: `src/app/_components/Services.tsx`
+- Modify: `src/app/page.tsx`
 - Test: `tests/unit/services.test.tsx`
 
 **Interfaces:**
@@ -1865,7 +1880,7 @@ Expected: FAIL, cannot resolve `@/app/_components/Services`.
 
 - [ ] **Step 3: Write the component**
 
-`app/_components/Services.tsx`:
+`src/app/_components/Services.tsx`:
 
 ```tsx
 import {
@@ -1942,7 +1957,7 @@ Expected: 3 passed.
 
 - [ ] **Step 5: Add Services to the page**
 
-Add the import and render `<Services />` after `<Journey />` in `app/page.tsx`.
+Add the import and render `<Services />` after `<Journey />` in `src/app/page.tsx`.
 
 - [ ] **Step 6: Commit**
 
@@ -1956,8 +1971,8 @@ git commit -m "feat: port services section with Phosphor icons and one CTA label
 ### Task 9: Partners section
 
 **Files:**
-- Create: `app/_components/Partners.tsx`
-- Modify: `app/page.tsx`
+- Create: `src/app/_components/Partners.tsx`
+- Modify: `src/app/page.tsx`
 - Test: `tests/unit/partners.test.tsx`
 
 **Interfaces:**
@@ -1998,7 +2013,7 @@ Expected: FAIL, cannot resolve `@/app/_components/Partners`.
 
 - [ ] **Step 3: Write the component**
 
-`app/_components/Partners.tsx`:
+`src/app/_components/Partners.tsx`:
 
 ```tsx
 import { bankPartners, insurancePartners } from "@/content/partners";
@@ -2073,7 +2088,7 @@ Expected: 2 passed.
 
 - [ ] **Step 5: Add Partners to the page**
 
-Add the import and render `<Partners />` after `<Services />` in `app/page.tsx`.
+Add the import and render `<Partners />` after `<Services />` in `src/app/page.tsx`.
 
 - [ ] **Step 6: Commit**
 
@@ -2089,8 +2104,8 @@ git commit -m "feat: port partners section with both logo grids"
 Retire item 1 forbids porting the div-based fake form. It becomes a labeled placeholder slot instead, which is honest and keeps the section renderable until the real embed code arrives.
 
 **Files:**
-- Create: `app/_components/Consultation.tsx`
-- Modify: `app/page.tsx`
+- Create: `src/app/_components/Consultation.tsx`
+- Modify: `src/app/page.tsx`
 - Test: `tests/unit/consultation.test.tsx`
 
 **Interfaces:**
@@ -2136,7 +2151,7 @@ Expected: FAIL, cannot resolve `@/app/_components/Consultation`.
 
 - [ ] **Step 3: Write the component**
 
-`app/_components/Consultation.tsx`:
+`src/app/_components/Consultation.tsx`:
 
 ```tsx
 import { contact } from "@/content/contact";
@@ -2212,7 +2227,7 @@ Expected: 3 passed.
 
 - [ ] **Step 5: Add Consultation to the page**
 
-Add the import and render `<Consultation />` after `<Partners />` in `app/page.tsx`.
+Add the import and render `<Consultation />` after `<Partners />` in `src/app/page.tsx`.
 
 - [ ] **Step 6: Commit**
 
@@ -2228,7 +2243,7 @@ git commit -m "feat: port consultation section with an honest Lendi slot"
 **Requires the URL-change confirmation from Global Constraints before starting.**
 
 **Files:**
-- Create: `app/about-me/page.tsx`, `app/about-me/_components/AboutHero.tsx`, `app/about-me/_components/AboutWorking.tsx`
+- Create: `src/app/about-me/page.tsx`, `src/app/about-me/_components/AboutHero.tsx`, `src/app/about-me/_components/AboutWorking.tsx`
 - Test: `tests/e2e/about-me.spec.ts`
 
 **Interfaces:**
@@ -2269,7 +2284,7 @@ Expected: FAIL, 404 on `/about-me`.
 
 - [ ] **Step 3: Write AboutHero**
 
-`app/about-me/_components/AboutHero.tsx`:
+`src/app/about-me/_components/AboutHero.tsx`:
 
 ```tsx
 import { contact } from "@/content/contact";
@@ -2351,7 +2366,7 @@ The legacy Facebook tile pointed at `href="#"`. It is dropped rather than ported
 
 - [ ] **Step 4: Write AboutWorking**
 
-`app/about-me/_components/AboutWorking.tsx`:
+`src/app/about-me/_components/AboutWorking.tsx`:
 
 ```tsx
 import Reveal from "@/components/Reveal";
@@ -2439,7 +2454,7 @@ export default function AboutWorking() {
 
 - [ ] **Step 5: Write the page**
 
-`app/about-me/page.tsx`:
+`src/app/about-me/page.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -2520,7 +2535,7 @@ git commit -m "feat: port the about-me page"
 Retire items 26 and 28.
 
 **Files:**
-- Create: `app/not-found.tsx`, `app/privacy-policy/page.tsx`
+- Create: `src/app/not-found.tsx`, `src/app/privacy-policy/page.tsx`
 - Test: `tests/e2e/routes.spec.ts`
 
 **Interfaces:**
@@ -2557,7 +2572,7 @@ Expected: FAIL on both.
 
 - [ ] **Step 3: Write the 404 page**
 
-`app/not-found.tsx`:
+`src/app/not-found.tsx`:
 
 ```tsx
 import Link from "next/link";
@@ -2598,7 +2613,7 @@ export default function NotFound() {
 
 - [ ] **Step 4: Write the privacy-policy placeholder**
 
-`app/privacy-policy/page.tsx`:
+`src/app/privacy-policy/page.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -2660,8 +2675,8 @@ git commit -m "feat: add custom 404 and privacy-policy placeholder route"
 Closes the brief's section 7 SEO gaps.
 
 **Files:**
-- Modify: `app/layout.tsx`, `app/page.tsx`
-- Create: `app/icon.svg`, `app/sitemap.ts`, `app/robots.ts`
+- Modify: `src/app/layout.tsx`, `src/app/page.tsx`
+- Create: `src/app/icon.svg`, `src/app/sitemap.ts`, `src/app/robots.ts`
 - Test: `tests/e2e/metadata.spec.ts`
 
 **Interfaces:**
@@ -2713,7 +2728,7 @@ Expected: FAIL on canonical, OG, `/icon.svg`, `/sitemap.xml`.
 
 - [ ] **Step 3: Expand the root metadata**
 
-Replace the `metadata` export in `app/layout.tsx`:
+Replace the `metadata` export in `src/app/layout.tsx`:
 
 ```tsx
 export const metadata: Metadata = {
@@ -2737,7 +2752,7 @@ export const metadata: Metadata = {
 
 Add the import: `import { site } from "@/content/site";`
 
-Add a page-level override in `app/page.tsx`:
+Add a page-level override in `src/app/page.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -2749,7 +2764,7 @@ export const metadata: Metadata = {
 
 - [ ] **Step 4: Write the favicon**
 
-`app/icon.svg`:
+`src/app/icon.svg`:
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HK">
@@ -2762,7 +2777,7 @@ This is a monogram wordmark, which is the one case the brief's iconography rule 
 
 - [ ] **Step 5: Write sitemap and robots**
 
-`app/sitemap.ts`:
+`src/app/sitemap.ts`:
 
 ```ts
 import type { MetadataRoute } from "next";
@@ -2776,7 +2791,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 }
 ```
 
-`app/robots.ts`:
+`src/app/robots.ts`:
 
 ```ts
 import type { MetadataRoute } from "next";
@@ -2802,7 +2817,7 @@ Expected: 3 passed.
 Append to the list in `DESIGN-BRIEF.md` section 8.3:
 
 ```markdown
-- Production domain. `content/site.ts` ships `https://example.invalid`; canonical URLs,
+- Production domain. `src/content/site.ts` ships `https://example.invalid`; canonical URLs,
   Open Graph URLs and `sitemap.xml` are all wrong until it is replaced.
 ```
 
@@ -3027,7 +3042,7 @@ The last test is the one that would have caught the legacy `.reveal { opacity: 0
 Run: `npm run test:e2e -- regression-guard.spec.ts`
 Expected: all pass. Two likely genuine failures and their meanings:
 - `no animation targets a non-GPU property` failing means a `transition-property` regressed to `all` or to a layout property somewhere.
-- `content is visible with JavaScript disabled` failing means a Motion `initial` state is hiding server-rendered content; the fix is in `components/Reveal.tsx`, not in the test.
+- `content is visible with JavaScript disabled` failing means a Motion `initial` state is hiding server-rendered content; the fix is in `src/components/Reveal.tsx`, not in the test.
 
 - [ ] **Step 3: Commit**
 
@@ -3131,8 +3146,8 @@ npm run dev
 
 Server Components by default. `"use client"` appears only on the smallest leaf that
 needs browser APIs, with server-rendered markup passed in as `children`. Shared
-components live in `components/`; route-specific ones sit in `app/<route>/_components/`.
-All page copy lives in `content/`, never inline in markup.
+components live in `src/components/`; route-specific ones sit in `src/app/<route>/_components/`.
+All page copy lives in `src/content/`, never inline in markup.
 
 ## Documentation
 
