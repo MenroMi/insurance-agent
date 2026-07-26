@@ -1,0 +1,18 @@
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import path from "node:path";
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./tests/setup.ts"],
+    include: ["tests/unit/**/*.test.{ts,tsx}"],
+    globals: true,
+  },
+  resolve: {
+    // Must match tsconfig's "@/*": ["./src/*"] or imports resolve in the
+    // editor but fail in tests.
+    alias: { "@": path.resolve(__dirname, "./src") },
+  },
+});
