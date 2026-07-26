@@ -291,20 +291,39 @@ justification to keep it as the display face. It only confirms none of the three
 faces need to be swapped out on diacritic-coverage grounds alone. No other section 4.1 candidate
 faces have been checked yet.
 
-**Separate finding surfaced by this verification, unrelated to typeface choice:** the token
-indirection pattern `--font-body: var(--font-dm-sans), system-ui, sans-serif;` (defined at `:root`
-in `globals.css`'s `@theme` block), combined with `next/font`'s CSS variable class placed on
-`<body>` as Task 2's original brief specified, does not resolve in current Chrome/Chromium
-(confirmed in both Playwright's bundled Chromium 151.0.7922.34 and a real installed Chrome
-150.0.0.0, and reproduced with a minimal synthetic repro unrelated to this codebase). A custom
-property's `var()` references appear to be substituted relative to the element where that
-property is *declared* (`:root`/`<html>`), not relative to the element that later *consumes* it —
-so `--font-dm-sans` being defined only on `<body>` (a descendant of `<html>`) was invisible to
-`--font-body`, and every `font-body`/`font-display`/`font-label` utility silently fell back to the
-system font stack with no error. Fixed by moving the `next/font` variable classes from `<body>` to
-`<html>` in `src/app/layout.tsx` (same element `:root` refers to). No token names, values, or font
-families changed. Later tasks that add more `next/font` variables should keep them on `<html>`,
-not `<body>`, to avoid the same silent failure.
+**Separate finding surfaced by this verification, unrelated to typeface choice.**
+
+`@theme` declares `--font-body: var(--font-dm-sans), system-ui, sans-serif` on `:root`. Task 2's
+original brief put `next/font`'s CSS variable classes on `<body>`. In that arrangement none of the
+three fonts render: every `font-body` / `font-display` / `font-label` utility silently falls back
+to the system stack, with no error and no failing test.
+
+**Cause, stated correctly: this is specified CSS behavior, not a browser bug.** An earlier version
+of this note described it as a Chrome/Chromium defect "worth re-verifying if a browser update
+changes the outcome". That was wrong and is corrected here, because the mistaken framing invites
+someone to move the classes back once a browser updates.
+
+The actual mechanism, per the CSS Custom Properties specification: `var()` references inside a
+custom property are substituted at computed-value time **on the element where that property is
+declared**, not on the element that later inherits and consumes it. `--font-body` is declared on
+`:root`, so its `var(--font-dm-sans)` is resolved against `:root`. With the font class on `<body>`,
+`--font-dm-sans` is unset at `:root`, so `--font-body` computes to the guaranteed-invalid value,
+and it is that invalid value which inherits down the tree. Defining `--font-dm-sans` further down
+cannot retroactively repair an ancestor's already-resolved value. The same failure reproduces in
+Firefox and Safari; no browser version will change it.
+
+**Fix:** the `next/font` variable classes moved from `<body>` to `<html>` in `src/app/layout.tsx`,
+which is the element `:root` refers to, so the referencing and referenced properties are declared
+together. No token names, values, or font families changed.
+
+**Standing rule for later tasks:** any additional `next/font` variable goes on `<html>`. More
+generally, a custom property and every custom property it references must be declared on the same
+element or on an ancestor of it, never on a descendant.
+
+Verified two ways: the controller reproduced both arrangements in a live browser (system stack
+with the classes on `<body>`, `"DM Sans", "DM Sans Fallback", system-ui, sans-serif` with them on
+`<html>`), and the task reviewer reproduced the cross-element failure and the same-element control
+in a minimal standalone case.
 
 ### 8.3 Assets and copy the design work depends on
 
