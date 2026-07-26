@@ -52,8 +52,14 @@ Overhaul means: **visual language is open, content and IA are preserved.**
 
 ### Preserve (section 11.C)
 
-- Anchor IDs unchanged: `#top`, `#jak-dzialam`, `#uslugi`, `#partnerzy`, `#kontakt`.
-- Primary nav labels unchanged: Strona główna, Poznaj Hannę, Usługi, Partnerzy, Bezpłatna konsultacja.
+- ~~Anchor IDs unchanged.~~ **Overridden by user decision, 2026-07-26.** URLs and anchor
+  fragments are now all English while user-visible copy stays Polish. Section 11.C wanted
+  anchors stable for SEO and muscle memory; section 7 of this brief records that there is no
+  indexed baseline to protect, so the SEO half of that rationale does not apply here. Mapping:
+  `#jak-dzialam` to `#how-it-works`, `#uslugi` to `#services`, `#partnerzy` to `#partners`,
+  `#kontakt` to `#contact`, `#top` unchanged.
+- Primary nav labels unchanged, in Polish: Strona główna, Poznaj Hannę, Usługi, Partnerzy,
+  Bezpłatna konsultacja. Only their `href` targets changed.
 - Copy voice unchanged. The restrained, no-pressure register ("bez presji", "czas na decyzję")
   is on-brief for trust-first. Visual modernisation is not a content rewrite.
 - Do not regress accessibility already in place: `lang="pl"`, alt text on all 22 logos,
@@ -61,10 +67,11 @@ Overhaul means: **visual language is open, content and IA are preserved.**
 
 ### Requires explicit approval before changing (section 11.F)
 
-- **URL structure.** `poznaj-hanne.html` becoming `/poznaj-hanne` under Next.js is a URL change.
-  Not yet approved.
-- Brand logo / wordmark (currently the "HK" monogram).
-- Legal / consent copy (none exists yet; see open items).
+- ~~**URL structure.**~~ **Approved 2026-07-26.** `poznaj-hanne.html` becomes `/about-me`, the
+  legal page is `/privacy-policy`, and all anchor fragments are English. The user's stated rule:
+  URLs in English, never tied to a person's name; interface copy stays Polish.
+- Brand logo / wordmark (currently the "HK" monogram). Still requires approval.
+- Legal / consent copy (none exists yet; see open items). Still requires approval.
 
 ---
 
@@ -103,7 +110,7 @@ Ordered by weight of violation. Tick during migration.
       most-violated rule. Present: `.eyebrow` x4, `.journey-kicker` x5, `.hero-kicker`,
       `.mini-label`, `.partners-label`. Limit is `ceil(5 sections / 3) = 2`.
 - [ ] **4. Nine CTAs with one intent, seven distinct labels.** Section 4.5 NO DUPLICATE CTA
-      INTENT is a Pre-Flight Fail. All resolve to `#kontakt`: "Bezpłatna konsultacja",
+      INTENT is a Pre-Flight Fail. All resolve to `#contact`: "Bezpłatna konsultacja",
       "Umów bezpłatną konsultację" x2, "Umów analizę", "Sprawdź możliwości", "Porozmawiajmy",
       "Sprawdź zakres", "Umów konsultację", "Skontaktuj się". Pick ONE label, use it everywhere.
 - [ ] **5. Three equal columns of service cards** (6 cards in `repeat(3, 1fr)`). Section 9.C

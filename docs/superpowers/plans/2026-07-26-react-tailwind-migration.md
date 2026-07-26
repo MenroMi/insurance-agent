@@ -14,7 +14,7 @@ Two decisions, recorded explicitly because they are choices rather than framewor
 
 **What Next.js actually mandates:** the routing conventions inside `app/` (folder name equals URL segment; the reserved files `page.tsx`, `layout.tsx`, `not-found.tsx`, `sitemap.ts`, `robots.ts`, `icon.svg`) and the Server/Client boundary. Nothing else. The `content/`, `lib/` and `components/` folders are this project's invention.
 
-**Decision 1, file layout: hybrid colocation.** Shared building blocks live in top-level `components/`. Anything used by exactly one route lives next to that route in `app/<route>/_components/`. The leading underscore is a Next convention that opts the folder out of routing. The point is that the folder a component sits in tells you whether it is safe to change: touching `app/_components/Hero.tsx` cannot affect `/poznaj-hanne`, and touching `components/Reveal.tsx` can affect everything.
+**Decision 1, file layout: hybrid colocation.** Shared building blocks live in top-level `components/`. Anything used by exactly one route lives next to that route in `app/<route>/_components/`. The leading underscore is a Next convention that opts the folder out of routing. The point is that the folder a component sits in tells you whether it is safe to change: touching `app/_components/Hero.tsx` cannot affect `/about-me`, and touching `components/Reveal.tsx` can affect everything.
 
 **Decision 2, the Server/Client boundary.** Server Components by default. `"use client"` appears only on the smallest possible leaf that genuinely needs browser APIs, and server-rendered markup reaches those leaves as `children`.
 
@@ -49,18 +49,29 @@ Item 9 is partially handled: the 12 radius values get encoded as `@theme` tokens
 
 ## Global Constraints
 
-Copied verbatim from `DESIGN-BRIEF.md`. Every task's requirements implicitly include this section.
+Derived from `DESIGN-BRIEF.md`, with the URL rule overridden by explicit user decision on 2026-07-26. Every task's requirements implicitly include this section.
 
-- **Anchor IDs unchanged:** `#top`, `#jak-dzialam`, `#uslugi`, `#partnerzy`, `#kontakt`.
-- **Primary nav labels unchanged:** `Strona główna`, `Poznaj Hannę`, `Usługi`, `Partnerzy`, `Bezpłatna konsultacja`.
-- **Copy voice unchanged.** Visual modernisation is not a content rewrite. Port Polish strings character for character except where a task explicitly says otherwise.
+- **All URLs and anchor fragments are English; all user-visible copy stays Polish.** This overrides the brief's "keep anchor IDs stable" rule (section 11.C), approved explicitly because brief section 7 records no indexed SEO baseline to lose. The mapping, applied once and then fixed:
+
+  | Legacy | This project |
+  |---|---|
+  | `poznaj-hanne.html` | `/about-me` |
+  | (none) | `/privacy-policy` |
+  | `#jak-dzialam` | `#how-it-works` |
+  | `#uslugi` | `#services` |
+  | `#partnerzy` | `#partners` |
+  | `#kontakt` | `#contact` |
+  | `#top` | `#top` (already English) |
+
+- **Primary nav labels unchanged, in Polish:** `Strona główna`, `Poznaj Hannę`, `Usługi`, `Partnerzy`, `Bezpłatna konsultacja`. Only their `href` values changed. A nav label and its URL are independent: `{ label: "Usługi", href: "/#services" }` is correct.
+- **Copy voice unchanged.** Visual modernisation is not a content rewrite. Port Polish strings character for character except where a task explicitly says otherwise. **Never let a URL rename touch prose:** `kontakt`, `partnerzy` and `usługi` are ordinary Polish words as well as former slugs. Strings like `Wybrani partnerzy`, `Skontaktuję się z Tobą`, `jedna osoba do kontaktu` and `bezpośredni kontakt` keep their Polish spelling.
 - **Zero em-dashes (`—`) and zero en-dashes (`–`) in any user-visible string.** Non-negotiable per brief retire item 2. Permitted dash characters: regular hyphen `-` only.
 - **`lang="pl"` on the html element.**
 - **`prefers-reduced-motion` honored in "degrade to static" form**, not by zeroing transition durations. `MOTION_INTENSITY: 4` is above 3, so this is mandatory.
 - **Do not regress the 14 items in the brief's "Regression guard" table.** Task 14 encodes them as automated assertions.
-- **URL structure:** `poznaj-hanne.html` becomes `/poznaj-hanne`. This is a URL change flagged in brief section 2 as requiring explicit approval. Confirm before Task 11.
 - **Polish diacritics:** every font must load the `latin-ext` subset. Brief section 8.2 records that per-face coverage was never verified; `latin-ext` is the mechanism, Task 2 Step 4 is the verification.
 - **Node 24.17.0, npm 11.13.0** confirmed present.
+- **Branch:** all work lands on `migration/next-tailwind`, never on `main`.
 
 ---
 
@@ -85,12 +96,12 @@ app/
     Services.tsx                Phosphor icons via the /ssr entry
     Partners.tsx                two logo grids
     Consultation.tsx            Lendi placeholder slot
-  poznaj-hanne/
+  about-me/
     page.tsx                    advisor page
     _components/                used only by this route
       AboutHero.tsx
       AboutWorking.tsx
-  polityka-prywatnosci/
+  privacy-policy/
     page.tsx                    legal placeholder (retire item 26)
 components/                     shared across routes
   SiteHeader.tsx          [c]   nav toggle, active link
@@ -322,12 +333,34 @@ Expected: build succeeds, output lists `/` as a static route.
 
 Run: `npm run dev`, open `http://127.0.0.1:3000`, confirm the heading renders large and bold (proves the Tailwind pipeline processes `text-3xl font-bold`). Stop the server.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 9: Capture the legacy visual baseline**
+
+**This must happen now, not in Task 15.** Task 6 moves `assets/logos/` to `public/logos/`, and the legacy `index.html` references `assets/logos/*`. After that move the legacy pages render with 22 broken images, so a baseline captured later is worthless and the migration loses its acceptance criterion. Nothing in Task 1 has touched the legacy files yet, so capture here.
+
+```bash
+mkdir -p /tmp/hanna-baseline
+python3 -m http.server 8099 >/dev/null 2>&1 &
+sleep 2
+npx playwright screenshot --full-page --viewport-size=1440,900 \
+  http://127.0.0.1:8099/index.html /tmp/hanna-baseline/legacy-home.png
+npx playwright screenshot --full-page --viewport-size=1440,900 \
+  http://127.0.0.1:8099/poznaj-hanne.html /tmp/hanna-baseline/legacy-about.png
+npx playwright screenshot --full-page --viewport-size=390,844 \
+  http://127.0.0.1:8099/index.html /tmp/hanna-baseline/legacy-home-mobile.png
+kill %1
+ls -la /tmp/hanna-baseline/
+```
+
+Expected: three PNG files, each larger than 100 KB. Open `legacy-home.png` and confirm the partner logos are visible; if they are missing, the assets already moved and the baseline is invalid.
+
+- [ ] **Step 10: Commit**
 
 ```bash
 git add -A
 git commit -m "build: scaffold Next.js 15, Tailwind v4 and test tooling"
 ```
+
+The baseline PNGs live in `/tmp` deliberately: they are throwaway verification artifacts, not repository content.
 
 ---
 
@@ -493,6 +526,41 @@ test("theme tokens resolve to the brief's values", async ({ page }) => {
   await expect(body).toHaveCSS("color", "rgb(29, 42, 57)"); // --color-ink
 });
 
+// Tailwind v4 resolves many utilities from dynamic scales. When a value is NOT
+// on a dynamic scale, Tailwind emits no rule at all: no build error, no failing
+// unit test, just silently missing styling. The plan leans on unusual values
+// (mt-17, gap-10.5, pt-25, py-26, p-9.5, opacity-36, z-80, z-100), so probe one
+// representative per family before writing 2000 lines that depend on them.
+test("unusual utility values actually emit CSS", async ({ page }) => {
+  await page.goto("/");
+  const probes = [
+    { cls: "mt-17", prop: "marginTop", expect: "68px" },
+    { cls: "gap-10.5", prop: "rowGap", expect: "42px" },
+    { cls: "py-26", prop: "paddingTop", expect: "104px" },
+    { cls: "p-9.5", prop: "paddingTop", expect: "38px" },
+    { cls: "opacity-36", prop: "opacity", expect: "0.36" },
+    { cls: "z-80", prop: "zIndex", expect: "80" },
+  ];
+
+  const results = await page.evaluate((list) => {
+    return list.map(({ cls, prop }) => {
+      const el = document.createElement("div");
+      el.className = cls;
+      el.style.position = "relative";
+      document.body.append(el);
+      const value = getComputedStyle(el)[prop as never] as string;
+      el.remove();
+      return { cls, value };
+    });
+  }, probes);
+
+  const failures = results
+    .filter((r, i) => r.value !== probes[i].expect)
+    .map((r, i) => `${r.cls}: got ${r.value}, expected ${probes[i].expect}`);
+
+  expect(failures, failures.join("; ")).toEqual([]);
+});
+
 test("focus-visible produces a visible outline", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => {
@@ -530,7 +598,9 @@ export default defineConfig({
 - [ ] **Step 4: Run the tests and verify Polish diacritics render**
 
 Run: `npm run test:e2e -- tokens.spec.ts`
-Expected: 2 passed.
+Expected: 3 passed.
+
+If `unusual utility values actually emit CSS` fails, the named value is not on a dynamic scale in this Tailwind version. Do not delete the assertion. Replace that family's usages throughout the plan's later tasks with bracket syntax (`opacity-[0.36]`, `z-[80]`, `mt-[68px]`) and record the substitution in your task report so later tasks use the same form. This is the one failure in this plan that is otherwise invisible.
 
 Then verify diacritics manually, which the brief flagged as unverified:
 
@@ -634,9 +704,9 @@ describe("content invariants", () => {
 
   it("preserves the public anchor targets", () => {
     const hrefs = navItems.map((i) => i.href);
-    expect(hrefs).toContain("#uslugi");
-    expect(hrefs).toContain("#partnerzy");
-    expect(hrefs).toContain("#kontakt");
+    expect(hrefs).toContain("#services");
+    expect(hrefs).toContain("#partners");
+    expect(hrefs).toContain("#contact");
   });
 
   it("carries 6 services, 5 journey steps, 4 benefits", () => {
@@ -682,10 +752,10 @@ export const site = {
 ```ts
 export const navItems = [
   { label: "Strona główna", href: "/" },
-  { label: "Poznaj Hannę", href: "/poznaj-hanne" },
-  { label: "Usługi", href: "/#uslugi" },
-  { label: "Partnerzy", href: "/#partnerzy" },
-  { label: "Bezpłatna konsultacja", href: "/#kontakt" },
+  { label: "Poznaj Hannę", href: "/about-me" },
+  { label: "Usługi", href: "/#services" },
+  { label: "Partnerzy", href: "/#partners" },
+  { label: "Bezpłatna konsultacja", href: "/#contact" },
 ] as const;
 ```
 
@@ -767,7 +837,7 @@ export const services = [
 export const journeySteps = [
   {
     n: 1,
-    kicker: "Pierwszy kontakt",
+    kicker: "Pierwszy contact",
     title: "Krótka rozmowa o tym, czego potrzebujesz",
     body: "Ustalamy temat, cel i to, czy potrzebna jest pełna analiza, czy prostsza ścieżka.",
     tags: ["bez zobowiązań", "online lub stacjonarnie"],
@@ -903,8 +973,14 @@ git commit -m "feat: extract page content into typed modules with a dash guard"
 ```tsx
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import SiteHeader from "@/components/SiteHeader";
+
+// SiteHeader calls usePathname(). Outside an App Router context that hook has
+// no provider, so it must be mocked or every test in this file throws.
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+}));
 
 describe("SiteHeader", () => {
   it("renders all five nav labels", () => {
@@ -1002,7 +1078,7 @@ export default function SiteHeader() {
           className="absolute inset-x-5 top-[78px] hidden flex-col gap-3.5 rounded-xl border border-line bg-surface p-5 shadow-card data-[open=true]:flex lg:static lg:flex lg:flex-row lg:items-center lg:gap-6 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
         >
           {navItems.map((item) => {
-            const isCta = item.href === "/#kontakt";
+            const isCta = item.href === "/#contact";
             const isActive = item.href === pathname;
             return (
               <Link
@@ -1056,10 +1132,10 @@ export default function SiteFooter() {
 
         <div className="flex flex-col gap-2.5">
           <strong>Serwis</strong>
-          <Link className="text-[13px] text-[#bed0dd]" href="/#jak-dzialam">Jak działam</Link>
-          <Link className="text-[13px] text-[#bed0dd]" href="/#uslugi">Usługi</Link>
-          <Link className="text-[13px] text-[#bed0dd]" href="/#partnerzy">Partnerzy</Link>
-          <Link className="text-[13px] text-[#bed0dd]" href="/polityka-prywatnosci">
+          <Link className="text-[13px] text-[#bed0dd]" href="/#how-it-works">Jak działam</Link>
+          <Link className="text-[13px] text-[#bed0dd]" href="/#services">Usługi</Link>
+          <Link className="text-[13px] text-[#bed0dd]" href="/#partners">Partnerzy</Link>
+          <Link className="text-[13px] text-[#bed0dd]" href="/privacy-policy">
             Polityka prywatności
           </Link>
         </div>
@@ -1317,13 +1393,13 @@ export default function Hero() {
 
           <div className="my-8.5 flex flex-wrap gap-3.5">
             <a
-              href="#kontakt"
+              href="#contact"
               className="inline-flex min-h-[54px] items-center justify-center rounded-pill bg-primary px-6 font-label font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-primary-strong active:translate-y-0"
             >
               Bezpłatna konsultacja
             </a>
             <a
-              href="#uslugi"
+              href="#services"
               className="inline-flex min-h-[54px] items-center justify-center rounded-pill border border-line bg-white/75 px-6 font-label font-extrabold text-ink transition hover:-translate-y-0.5 active:translate-y-0"
             >
               Zobacz zakres usług
@@ -1394,9 +1470,14 @@ export default function PartnerMarquee() {
         </span>
         <div className="overflow-hidden">
           <div className="flex w-max animate-marquee gap-10.5 motion-reduce:animate-none motion-reduce:flex-wrap motion-reduce:gap-y-5">
-            {marqueePartners.map((file) => (
+            {/*
+              The list is rendered twice so translateX(-50%) loops seamlessly.
+              The second copy exists only for the loop, so it is hidden when the
+              animation is off. One map over a doubled array, not two maps.
+            */}
+            {[...marqueePartners, ...marqueePartners].map((file, i) => (
               <img
-                key={file}
+                key={`${file}-${i}`}
                 src={`/logos/${file}`}
                 alt=""
                 aria-hidden="true"
@@ -1404,19 +1485,9 @@ export default function PartnerMarquee() {
                 height={60}
                 loading="lazy"
                 /* mix-blend-mode blends the white background of raster logos (JPEG/PNG) */
-                className="block h-6.5 w-auto mix-blend-multiply grayscale opacity-55"
-              />
-            ))}
-            {marqueePartners.map((file) => (
-              <img
-                key={`dup-${file}`}
-                src={`/logos/${file}`}
-                alt=""
-                aria-hidden="true"
-                width={160}
-                height={60}
-                loading="lazy"
-                className="block h-6.5 w-auto mix-blend-multiply grayscale opacity-55 motion-reduce:hidden"
+                className={`block h-6.5 w-auto mix-blend-multiply grayscale opacity-55${
+                  i >= marqueePartners.length ? " motion-reduce:hidden" : ""
+                }`}
               />
             ))}
           </div>
@@ -1616,7 +1687,7 @@ import Reveal from "@/components/Reveal";
 
 export default function Journey() {
   return (
-    <section id="jak-dzialam" className="bg-surface py-26">
+    <section id="how-it-works" className="bg-surface py-26">
       <div className="mx-auto grid w-[min(100%-40px,var(--container-site))] items-start gap-21 lg:grid-cols-[.82fr_1.18fr]">
         <Reveal className="lg:sticky lg:top-28">
           <p className="mb-3 font-label text-xs font-extrabold uppercase tracking-[0.15em] text-primary">
@@ -1639,7 +1710,7 @@ export default function Journey() {
           </figure>
 
           <a
-            href="#kontakt"
+            href="#contact"
             className="mt-7 inline-flex min-h-[54px] items-center justify-center rounded-pill bg-primary px-6 font-label font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-primary-strong active:translate-y-0"
           >
             Bezpłatna konsultacja
@@ -1820,7 +1891,7 @@ const icons: Record<ServiceIconName, Icon> = {
 
 export default function Services() {
   return (
-    <section id="uslugi" className="bg-surface-soft py-26">
+    <section id="services" className="bg-surface-soft py-26">
       <div className="mx-auto w-[min(100%-40px,var(--container-site))]">
         <Reveal>
           <div className="mb-13 max-w-[790px]">
@@ -1846,7 +1917,7 @@ export default function Services() {
                   <h3 className="mb-2.5 mt-6 font-display text-[22px]">{service.title}</h3>
                   <p className="max-w-[65ch] text-muted">{service.body}</p>
                   <a
-                    href="#kontakt"
+                    href="#contact"
                     className="mt-auto pt-6 font-label font-extrabold text-primary transition hover:text-primary-strong"
                   >
                     Bezpłatna konsultacja
@@ -1950,7 +2021,7 @@ const groups: Group[] = [
 
 export default function Partners() {
   return (
-    <section id="partnerzy" className="bg-surface py-26">
+    <section id="partners" className="bg-surface py-26">
       <div className="mx-auto w-[min(100%-40px,var(--container-site))]">
         <Reveal>
           <div className="mb-10 max-w-[790px]">
@@ -2073,7 +2144,7 @@ import Reveal from "@/components/Reveal";
 
 export default function Consultation() {
   return (
-    <section id="kontakt" className="bg-surface-soft py-26">
+    <section id="contact" className="bg-surface-soft py-26">
       <Reveal className="mx-auto w-[min(100%-40px,var(--container-site))]">
         <div className="grid overflow-hidden rounded-[34px] bg-surface shadow-card lg:grid-cols-[.82fr_1.18fr]">
           <div className="bg-[radial-gradient(circle_at_20%_20%,rgb(210_170_104/0.15),transparent_28%),var(--color-primary-dark)] p-12 text-white">
@@ -2120,7 +2191,7 @@ export default function Consultation() {
                 </p>
                 <p className="mx-auto mt-2 max-w-[46ch] text-[13px] text-muted">
                   Po otrzymaniu oficjalnego kodu widget zostanie osadzony w tym miejscu.
-                  Do tego czasu prosimy o kontakt telefoniczny lub e-mail.
+                  Do tego czasu prosimy o contact telefoniczny lub e-mail.
                 </p>
               </div>
             </div>
@@ -2152,27 +2223,27 @@ git commit -m "feat: port consultation section with an honest Lendi slot"
 
 ---
 
-### Task 11: The `/poznaj-hanne` page
+### Task 11: The `/about-me` page
 
 **Requires the URL-change confirmation from Global Constraints before starting.**
 
 **Files:**
-- Create: `app/poznaj-hanne/page.tsx`, `app/poznaj-hanne/_components/AboutHero.tsx`, `app/poznaj-hanne/_components/AboutWorking.tsx`
-- Test: `tests/e2e/poznaj-hanne.spec.ts`
+- Create: `app/about-me/page.tsx`, `app/about-me/_components/AboutHero.tsx`, `app/about-me/_components/AboutWorking.tsx`
+- Test: `tests/e2e/about-me.spec.ts`
 
 **Interfaces:**
 - Consumes: `contact`, `site` (Task 3), `Reveal` (Task 5).
-- Produces: route `/poznaj-hanne`; `<AboutHero />` and `<AboutWorking />`, default exports, server components.
+- Produces: route `/about-me`; `<AboutHero />` and `<AboutWorking />`, default exports, server components.
 
 - [ ] **Step 1: Write the failing route test**
 
-`tests/e2e/poznaj-hanne.spec.ts`:
+`tests/e2e/about-me.spec.ts`:
 
 ```ts
 import { expect, test } from "@playwright/test";
 
 test("the advisor page renders its heading and philosophy", async ({ page }) => {
-  await page.goto("/poznaj-hanne");
+  await page.goto("/about-me");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "dobra decyzja finansowa",
   );
@@ -2180,25 +2251,25 @@ test("the advisor page renders its heading and philosophy", async ({ page }) => 
 });
 
 test("the advisor page has no dead links", async ({ page }) => {
-  await page.goto("/poznaj-hanne");
+  await page.goto("/about-me");
   const deadLinks = await page.locator('a[href="#"]').count();
   expect(deadLinks).toBe(0);
 });
 
 test("the four how-I-work blocks render", async ({ page }) => {
-  await page.goto("/poznaj-hanne");
+  await page.goto("/about-me");
   await expect(page.getByRole("article")).toHaveCount(4);
 });
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm run test:e2e -- poznaj-hanne.spec.ts`
-Expected: FAIL, 404 on `/poznaj-hanne`.
+Run: `npm run test:e2e -- about-me.spec.ts`
+Expected: FAIL, 404 on `/about-me`.
 
 - [ ] **Step 3: Write AboutHero**
 
-`app/poznaj-hanne/_components/AboutHero.tsx`:
+`app/about-me/_components/AboutHero.tsx`:
 
 ```tsx
 import { contact } from "@/content/contact";
@@ -2280,7 +2351,7 @@ The legacy Facebook tile pointed at `href="#"`. It is dropped rather than ported
 
 - [ ] **Step 4: Write AboutWorking**
 
-`app/poznaj-hanne/_components/AboutWorking.tsx`:
+`app/about-me/_components/AboutWorking.tsx`:
 
 ```tsx
 import Reveal from "@/components/Reveal";
@@ -2368,20 +2439,20 @@ export default function AboutWorking() {
 
 - [ ] **Step 5: Write the page**
 
-`app/poznaj-hanne/page.tsx`:
+`app/about-me/page.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
 import Link from "next/link";
-import AboutHero from "@/app/poznaj-hanne/_components/AboutHero";
-import AboutWorking from "@/app/poznaj-hanne/_components/AboutWorking";
+import AboutHero from "@/app/about-me/_components/AboutHero";
+import AboutWorking from "@/app/about-me/_components/AboutWorking";
 import Reveal from "@/components/Reveal";
 
 export const metadata: Metadata = {
   title: "Poznaj Hannę",
   description:
     "Poznaj Hannę Khudziakovą: sposób pracy, bezpośredni kontakt i podejście do konsultacji ubezpieczeniowych oraz finansowych.",
-  alternates: { canonical: "/poznaj-hanne" },
+  alternates: { canonical: "/about-me" },
 };
 
 export default function AboutPage() {
@@ -2417,7 +2488,7 @@ export default function AboutPage() {
               </p>
             </div>
             <Link
-              href="/#kontakt"
+              href="/#contact"
               className="inline-flex min-h-[54px] w-fit items-center justify-center whitespace-nowrap rounded-pill bg-primary px-6 font-label font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-primary-strong active:translate-y-0"
             >
               Bezpłatna konsultacja
@@ -2432,14 +2503,14 @@ export default function AboutPage() {
 
 - [ ] **Step 6: Run the tests to verify they pass**
 
-Run: `npm run test:e2e -- poznaj-hanne.spec.ts`
+Run: `npm run test:e2e -- about-me.spec.ts`
 Expected: 3 passed.
 
 - [ ] **Step 7: Commit**
 
 ```bash
 git add -A
-git commit -m "feat: port the poznaj-hanne page"
+git commit -m "feat: port the about-me page"
 ```
 
 ---
@@ -2449,12 +2520,12 @@ git commit -m "feat: port the poznaj-hanne page"
 Retire items 26 and 28.
 
 **Files:**
-- Create: `app/not-found.tsx`, `app/polityka-prywatnosci/page.tsx`
+- Create: `app/not-found.tsx`, `app/privacy-policy/page.tsx`
 - Test: `tests/e2e/routes.spec.ts`
 
 **Interfaces:**
 - Consumes: `navItems` (Task 3).
-- Produces: routes `/polityka-prywatnosci` and the 404 boundary.
+- Produces: routes `/privacy-policy` and the 404 boundary.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2471,7 +2542,7 @@ test("unknown routes return a branded 404 with a way back", async ({ page }) => 
 });
 
 test("the privacy policy route exists and is marked as a draft", async ({ page }) => {
-  await page.goto("/polityka-prywatnosci");
+  await page.goto("/privacy-policy");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "Polityka prywatności",
   );
@@ -2513,7 +2584,7 @@ export default function NotFound() {
             Strona główna
           </Link>
           <Link
-            href="/#kontakt"
+            href="/#contact"
             className="inline-flex min-h-[54px] items-center justify-center rounded-pill border border-line bg-surface px-6 font-label font-extrabold text-ink transition hover:-translate-y-0.5 active:translate-y-0"
           >
             Bezpłatna konsultacja
@@ -2527,7 +2598,7 @@ export default function NotFound() {
 
 - [ ] **Step 4: Write the privacy-policy placeholder**
 
-`app/polityka-prywatnosci/page.tsx`:
+`app/privacy-policy/page.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -2535,7 +2606,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Polityka prywatności",
   robots: { index: false, follow: false },
-  alternates: { canonical: "/polityka-prywatnosci" },
+  alternates: { canonical: "/privacy-policy" },
 };
 
 export default function PrivacyPage() {
@@ -2627,7 +2698,7 @@ test("a favicon is served", async ({ request }) => {
 test("sitemap and robots are generated", async ({ request }) => {
   const sitemap = await request.get("/sitemap.xml");
   expect(sitemap.status()).toBe(200);
-  expect(await sitemap.text()).toContain("/poznaj-hanne");
+  expect(await sitemap.text()).toContain("/about-me");
 
   const robots = await request.get("/robots.txt");
   expect(robots.status()).toBe(200);
@@ -2700,7 +2771,7 @@ import { site } from "@/content/site";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${site.baseUrl}/`, priority: 1 },
-    { url: `${site.baseUrl}/poznaj-hanne`, priority: 0.8 },
+    { url: `${site.baseUrl}/about-me`, priority: 0.8 },
   ];
 }
 ```
@@ -2713,7 +2784,7 @@ import { site } from "@/content/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: "/polityka-prywatnosci" }],
+    rules: [{ userAgent: "*", allow: "/", disallow: "/privacy-policy" }],
     sitemap: `${site.baseUrl}/sitemap.xml`,
   };
 }
@@ -2763,7 +2834,7 @@ Encodes the brief's 14-row regression guard plus its mechanical counts as execut
 ```ts
 import { expect, test } from "@playwright/test";
 
-const ROUTES = ["/", "/poznaj-hanne"] as const;
+const ROUTES = ["/", "/about-me"] as const;
 
 for (const route of ROUTES) {
   test(`${route}: zero em-dashes and en-dashes in visible text`, async ({ page }) => {
@@ -2871,7 +2942,7 @@ test("skip link is the first tab stop and targets main content", async ({ page }
 
 test("public anchor targets all exist on the home page", async ({ page }) => {
   await page.goto("/");
-  for (const id of ["top", "jak-dzialam", "uslugi", "partnerzy", "kontakt"]) {
+  for (const id of ["top", "how-it-works", "services", "partners", "contact"]) {
     await expect(page.locator(`#${id}`), `#${id}`).toHaveCount(1);
   }
 });
@@ -2891,7 +2962,7 @@ test("nav labels are unchanged", async ({ page }) => {
 });
 
 test("current page is marked in the nav", async ({ page }) => {
-  await page.goto("/poznaj-hanne");
+  await page.goto("/about-me");
   await expect(page.locator('header nav a[aria-current="page"]')).toHaveCount(1);
 });
 
@@ -2943,7 +3014,7 @@ test("content is visible with JavaScript disabled", async ({ browser }) => {
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText("Wybierz temat")).toBeVisible();
-  await expect(page.locator("#partnerzy")).toBeVisible();
+  await expect(page.locator("#partners")).toBeVisible();
 
   await context.close();
 });
@@ -2979,21 +3050,15 @@ The migration's acceptance criterion. Only after parity is confirmed do the old 
 - Consumes: everything.
 - Produces: a repo whose only site implementation is the Next app.
 
-- [ ] **Step 1: Capture the legacy baseline**
+- [ ] **Step 1: Confirm the legacy baseline from Task 1 exists**
 
-The legacy site is still in the working tree at this point. Serve it on a second port and screenshot both pages:
+The baseline was captured in Task 1 Step 9, before Task 6 moved the logo assets. Do not try to re-capture it here: the legacy `index.html` points at `assets/logos/*`, which no longer exists, so a fresh capture would show 22 broken images.
 
 ```bash
-python3 -m http.server 8099 &
-sleep 2
-npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:8099/index.html /tmp/legacy-home.png
-npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:8099/poznaj-hanne.html /tmp/legacy-about.png
-npx playwright screenshot --full-page --viewport-size=390,844 \
-  http://127.0.0.1:8099/index.html /tmp/legacy-home-mobile.png
-kill %1
+ls -la /tmp/hanna-baseline/
 ```
+
+Expected: `legacy-home.png`, `legacy-about.png`, `legacy-home-mobile.png`. If any is missing, stop and report BLOCKED: the baseline cannot be reconstructed from the current working tree. Recovering it requires checking the legacy asset paths out of the Task 1 commit into a scratch directory, which is a decision for the controller, not this task.
 
 - [ ] **Step 2: Capture the migrated pages**
 
@@ -3001,11 +3066,11 @@ kill %1
 npm run build && npm run start &
 sleep 5
 npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:3000/ /tmp/next-home.png
+  http://127.0.0.1:3000/ /tmp/hanna-baseline/next-home.png
 npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:3000/poznaj-hanne /tmp/next-about.png
+  http://127.0.0.1:3000/about-me /tmp/hanna-baseline/next-about.png
 npx playwright screenshot --full-page --viewport-size=390,844 \
-  http://127.0.0.1:3000/ /tmp/next-home-mobile.png
+  http://127.0.0.1:3000/ /tmp/hanna-baseline/next-home-mobile.png
 kill %1
 ```
 
@@ -3017,7 +3082,7 @@ Open the three pairs side by side. Expected, intended deviations, all traceable 
 - service icons are Phosphor glyphs, not emoji (item 10)
 - all service-card CTAs read `Bezpłatna konsultacja` (item 4)
 - the consultation panel shows a dashed Lendi slot, not a fake form (item 1)
-- the Facebook tile is gone from `/poznaj-hanne` (dead link)
+- the Facebook tile is gone from `/about-me` (dead link)
 - journey steps are all at full opacity rather than dimmed until scrolled
 
 Any deviation **not** on that list is a porting bug. Fix it before continuing.
@@ -3030,7 +3095,7 @@ npm run test:e2e
 npm run build
 ```
 
-Expected: all unit tests pass, all e2e tests pass, build succeeds with `/`, `/poznaj-hanne`, `/polityka-prywatnosci` listed as static and `/sitemap.xml`, `/robots.txt` as generated routes.
+Expected: all unit tests pass, all e2e tests pass, build succeeds with `/`, `/about-me`, `/privacy-policy` listed as static and `/sitemap.xml`, `/robots.txt` as generated routes.
 
 - [ ] **Step 5: Delete the legacy implementation**
 
@@ -3126,6 +3191,15 @@ git commit -m "refactor: retire the vanilla implementation after verifying parit
 
 The `TODO:` comments in Tasks 6, 10, 11 and 12 are intentional in-code markers for blocked assets, each naming the brief section that owns it, not plan placeholders.
 
+**2b. Pre-flight scan** (run separately, before dispatching Task 1, per `subagent-driven-development`). Four more defects, all fixed:
+
+- **The visual parity check was impossible as written.** Task 6 moves `assets/logos/` to `public/logos/`; Task 15 then served the legacy `index.html`, which references `assets/logos/*`. The baseline would have shown 22 broken images and the migration's acceptance criterion would have quietly evaporated. Baseline capture moved to Task 1 Step 9, before any asset moves; Task 15 Step 1 now verifies rather than captures, and reports BLOCKED if the files are missing.
+- **Task 4's test would have failed on every run.** `SiteHeader` calls `usePathname()`, which has no provider outside an App Router context. Added `vi.mock("next/navigation", …)`.
+- **Tailwind v4 dynamic scales were assumed, not verified.** The plan uses `mt-17`, `gap-10.5`, `pt-25`, `py-26`, `p-9.5`, `opacity-36`, `z-80`, `z-100`. When a value is off-scale Tailwind emits nothing: no build error, no failing test, only wrong visuals. Added a probe test to Task 2 covering one representative per family, with instructions to substitute bracket syntax and propagate the substitution rather than delete the assertion.
+- **Task 6 mandated verbatim duplicated JSX** (`marqueePartners.map` twice) that a quality reviewer would correctly flag, putting the reviewer and the plan in conflict. Replaced with one map over a doubled array, using the index to hide the loop-only copy under reduced motion.
+
+**2c. A rename hazard discovered while applying the English-URL decision.** Replacing the Polish slugs with English ones corrupted five prose strings, because `kontakt`, `partnerzy` and `usługi` are ordinary Polish words as well as former slugs: `Skontaktuj się`, `Skontaktuję się z Tobą`, `jedna osoba do kontaktu`, `bezpośredni kontakt` and `Wybrani partnerzy` were all mangled before being restored. Global Constraints now carries this as an explicit warning, because the same trap is waiting for any later task that touches URLs.
+
 **3. Type consistency.** Checked across tasks: `ServiceIconName` is defined in Task 3 and consumed in Task 8's `icons` record. `marqueePartners` is `readonly string[]` in Task 3 and spread into a `Set<string>` in Task 6. `insurancePartners` and `bankPartners` share `{ name, file }`, matching Task 9's local `Group` type. `contact.phoneHref` is the single source used in Tasks 4, 10 and 11. `Reveal`'s props (`children`, `delay`, `className`) match every call site. `site.baseUrl` is defined in Task 3 and consumed in Task 13's `metadataBase`, `sitemap` and `robots`. The token name `ink` is used consistently instead of `text` in Tasks 2, 4, 6, 7, 8, 9, 12.
 
 ---
@@ -3140,4 +3214,4 @@ Plan complete. Two execution options:
 
 Two gates must clear before Task 1 starts:
 - **Next.js versus Vite + React** (see the assumption note at the top).
-- **The `/poznaj-hanne` URL change** (Global Constraints), needed before Task 11.
+- **The `/about-me` URL change** (Global Constraints), needed before Task 11.
