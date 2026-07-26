@@ -1,1 +1,95 @@
 @import "tailwindcss";
+
+@theme {
+  /* Colors: copied from DESIGN-BRIEF.md section 3 */
+  --color-primary: #2f78b7;
+  --color-primary-strong: #205f96;
+  --color-primary-dark: #173d60;
+  --color-accent: #d1aa68;
+  --color-accent-soft: #f3e5c8;
+  --color-ink: #1d2a39;
+  --color-muted: #68788c;
+  --color-line: #dbe4ec;
+  --color-success: #4a936d;
+  --color-page: #f7f9fc;
+  --color-surface: #ffffff;
+  --color-surface-soft: #edf3f8;
+  --color-surface-blue: #eaf4fb;
+
+  /*
+   * DEFERRED DEBT, must be revisited before launch.
+   * All 12 radius values from the legacy CSS, tokenised but NOT unified.
+   * Kept distinct on purpose so the migration stays visually verifiable against
+   * the Task 15 baseline. DESIGN-BRIEF.md retire item 9 requires collapsing
+   * these to one documented scale during the design phase; tokenising now means
+   * that becomes an edit to this block rather than a sweep through every file.
+   */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 15px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-3xl: 30px;
+  --radius-4xl: 32px;
+  --radius-5xl: 34px;
+  --radius-pill: 999px;
+
+  /* Shadows: tinted with the page hue, never black (regression guard) */
+  --shadow-card: 0 22px 70px rgb(24 61 96 / 0.12);
+  --shadow-card-soft: 0 12px 36px rgb(24 61 96 / 0.07);
+
+  /* Container */
+  --container-site: 1180px;
+
+  /*
+   * DEFERRED DEBT, must be revisited before launch.
+   * These three faces are carried over from the legacy site ON PURPOSE, so the
+   * migration stays visually verifiable against the Task 15 baseline. They are
+   * NOT the intended final typography.
+   * - Playfair Display as the default display face is unjustified for a
+   *   regulated financial brief; DESIGN-BRIEF.md section 8.2 calls for a sans
+   *   display face instead.
+   * - Three families is one more than the pairings the design skill suggests.
+   * Blocked on: verifying Polish diacritic coverage per candidate face.
+   */
+  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-label: var(--font-manrope), sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* sticky header height (78px) plus breathing room */
+    scroll-padding-top: 96px;
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    line-height: 1.6;
+  }
+
+  /* Retire item 16: visible focus for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid var(--color-primary-dark);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Retire item 20: no orphans in the long Polish headlines */
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}

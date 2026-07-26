@@ -281,6 +281,31 @@ is not justified either.
 the section 4.1 pool cover Latin Extended partially or not at all. Coverage per candidate has NOT
 been verified. Do this before committing to a face.
 
+**Update (Task 2, 2026-07-26):** Diacritic coverage verified for the three carried-over legacy
+faces only (DM Sans / `--font-body`, Playfair Display / `--font-display`, Manrope / `--font-label`),
+each loaded via `next/font/google` with the `latin-ext` subset. Rendered `ąćęłńóśźż ĄĆĘŁŃÓŚŹŻ` at
+44px in a real Chrome browser (Chrome 150) for all three; every glyph rendered with its correct
+diacritic in all three families, no missing or malformed marks. This does NOT resolve the
+sans-vs-serif direction above — Playfair Display passing the diacritic check is not a
+justification to keep it as the display face. It only confirms none of the three carried-over
+faces need to be swapped out on diacritic-coverage grounds alone. No other section 4.1 candidate
+faces have been checked yet.
+
+**Separate finding surfaced by this verification, unrelated to typeface choice:** the token
+indirection pattern `--font-body: var(--font-dm-sans), system-ui, sans-serif;` (defined at `:root`
+in `globals.css`'s `@theme` block), combined with `next/font`'s CSS variable class placed on
+`<body>` as Task 2's original brief specified, does not resolve in current Chrome/Chromium
+(confirmed in both Playwright's bundled Chromium 151.0.7922.34 and a real installed Chrome
+150.0.0.0, and reproduced with a minimal synthetic repro unrelated to this codebase). A custom
+property's `var()` references appear to be substituted relative to the element where that
+property is *declared* (`:root`/`<html>`), not relative to the element that later *consumes* it —
+so `--font-dm-sans` being defined only on `<body>` (a descendant of `<html>`) was invisible to
+`--font-body`, and every `font-body`/`font-display`/`font-label` utility silently fell back to the
+system font stack with no error. Fixed by moving the `next/font` variable classes from `<body>` to
+`<html>` in `src/app/layout.tsx` (same element `:root` refers to). No token names, values, or font
+families changed. Later tasks that add more `next/font` variables should keep them on `<html>`,
+not `<body>`, to avoid the same silent failure.
+
 ### 8.3 Assets and copy the design work depends on
 
 Not design decisions, but they gate "done" in any stack:
