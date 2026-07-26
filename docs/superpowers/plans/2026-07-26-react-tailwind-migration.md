@@ -427,8 +427,14 @@ Replace `src/app/globals.css` entirely:
   --color-surface-soft: #edf3f8;
   --color-surface-blue: #eaf4fb;
 
-  /* Radii: the 12 values from the legacy CSS. Consolidation is a design-phase
-     job (DESIGN-BRIEF.md retire item 9). Tokenised here, not yet unified. */
+  /*
+   * DEFERRED DEBT, must be revisited before launch.
+   * All 12 radius values from the legacy CSS, tokenised but NOT unified.
+   * Kept distinct on purpose so the migration stays visually verifiable against
+   * the Task 15 baseline. DESIGN-BRIEF.md retire item 9 requires collapsing
+   * these to one documented scale during the design phase; tokenising now means
+   * that becomes an edit to this block rather than a sweep through every file.
+   */
   --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 15px;
@@ -446,7 +452,17 @@ Replace `src/app/globals.css` entirely:
   /* Container */
   --container-site: 1180px;
 
-  /* Font families, injected by next/font */
+  /*
+   * DEFERRED DEBT, must be revisited before launch.
+   * These three faces are carried over from the legacy site ON PURPOSE, so the
+   * migration stays visually verifiable against the Task 15 baseline. They are
+   * NOT the intended final typography.
+   * - Playfair Display as the default display face is unjustified for a
+   *   regulated financial brief; DESIGN-BRIEF.md section 8.2 calls for a sans
+   *   display face instead.
+   * - Three families is one more than the pairings the design skill suggests.
+   * Blocked on: verifying Polish diacritic coverage per candidate face.
+   */
   --font-body: var(--font-dm-sans), system-ui, sans-serif;
   --font-display: var(--font-playfair), Georgia, serif;
   --font-label: var(--font-manrope), sans-serif;

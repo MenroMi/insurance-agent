@@ -247,6 +247,21 @@ Metadata API covers most of it.
 
 ## 8. Open decisions, with blockers
 
+> **Deliberately carried through the migration unchanged. Must not ship as-is.**
+>
+> The migration reproduces the legacy look on purpose, so that visual parity against the
+> Task 15 baseline is a meaningful check. That means two pieces of known debt travel into the
+> React codebase intact, and both are tracked here rather than left to be noticed later:
+>
+> | Debt | Where it lives after migration | Owner |
+> |---|---|---|
+> | Playfair Display as the display face, and three font families instead of two | `src/app/globals.css` `@theme`, `src/app/layout.tsx` | section 8.2 below |
+> | All 12 legacy `border-radius` values kept as separate tokens | `src/app/globals.css` `@theme` | retire item 9 in section 4 |
+>
+> Both carry a `DEFERRED DEBT` comment at the point of definition, so anyone reading the
+> stylesheet sees the status without reading this document. Neither is a bug to be reported in
+> code review; both are scheduled work.
+
 ### 8.1 Single accent color
 
 Section 4.2 allows one accent; the site currently runs blue plus gold. Must pick one.
