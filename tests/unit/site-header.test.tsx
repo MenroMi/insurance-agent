@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import SiteHeader from '@/components/SiteHeader';
+import { SiteHeader } from '@/components/layout/SiteHeader';
 
 // SiteHeader calls usePathname(). Outside an App Router context that hook has
 // no provider, so it must be mocked or every test in this file throws.

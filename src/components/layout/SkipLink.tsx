@@ -2,7 +2,7 @@
  * Retire item 18. Targets #top, which Task 6 puts on the hero section; that
  * section must carry tabIndex={-1} or the browser scrolls without moving focus.
  */
-export default function SkipLink() {
+export const SkipLink = () => {
   return (
     <a
       href="#top"
@@ -11,4 +11,4 @@ export default function SkipLink() {
       Przejdź do treści
     </a>
   );
-}
+};

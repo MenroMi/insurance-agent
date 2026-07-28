@@ -10,7 +10,7 @@ export const insurancePartners = [
   { name: 'Vienna Life', file: 'vienna-life.svg' },
   { name: 'ERGO Hestia', file: 'ergo-hestia.svg' },
   { name: 'PZU', file: 'pzu.svg' },
-  { name: 'Leadenhall', file: 'leadenhall.svg' },
+  { name: 'Leadenhall', file: 'leadenhall.png' },
   { name: 'UNIQA', file: 'uniqa.svg' },
 ] as const;
 
@@ -27,9 +27,12 @@ export const bankPartners = [
 ] as const;
 
 /**
- * The subset shown in the scrolling strip below the hero. The three raster
- * extensions are deliberate; the cleanup pass corrected these paths after they
- * pointed at non-existent .svg files.
+ * Raster extensions here are deliberate, never a mistake to be "fixed" back to
+ * .svg: where a logo exists in both forms the raster one wins, because it means
+ * the vector was either never found or looked wrong. Four files are affected:
+ * compensa.png, bnp-paribas.png, leadenhall.png and pko-bp.jpg.
+ *
+ * The subset below is what scrolls in the strip under the hero.
  */
 export const marqueePartners = [
   'allianz.svg',

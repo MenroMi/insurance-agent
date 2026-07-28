@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { contact } from '@/content/contact';
 import { site } from '@/content/site';
 
-export default function SiteFooter() {
+export const SiteFooter = () => {
   return (
     <footer className="bg-footer pb-6 pt-14 text-white">
       <div className="mx-auto grid w-[min(100%-40px,var(--container-site))] gap-15 md:grid-cols-[1.5fr_.7fr_.7fr]">
@@ -64,4 +64,4 @@ export default function SiteFooter() {
       </div>
     </footer>
   );
-}
+};

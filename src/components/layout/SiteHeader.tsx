@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { navItems } from '@/content/nav';
 import { site } from '@/content/site';
 
-export default function SiteHeader() {
+export const SiteHeader = () => {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -69,4 +69,4 @@ export default function SiteHeader() {
       </div>
     </header>
   );
-}
+};

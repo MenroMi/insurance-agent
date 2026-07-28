@@ -24,23 +24,33 @@ test('unusual utility values actually emit CSS', async ({ page }) => {
     { cls: 'z-80', prop: 'zIndex', expect: '80' },
   ];
 
-  const results = await page.evaluate((list) => {
-    return list.map(({ cls, prop }) => {
-      const el = document.createElement('div');
-      el.className = cls;
-      el.style.position = 'relative';
-      document.body.append(el);
-      const value = getComputedStyle(el)[prop as never] as string;
-      el.remove();
-      return { cls, value };
-    });
-  }, probes);
+  // Polled, not read once: in dev the server compiles on demand, so a cold
+  // `goto` can resolve before the stylesheet is applied and every probe would
+  // then report the unstyled value. That produced a spurious failure once.
+  await expect
+    .poll(
+      async () => {
+        const results = await page.evaluate((list) => {
+          return list.map(({ cls, prop }) => {
+            const el = document.createElement('div');
+            el.className = cls;
+            el.style.position = 'relative';
+            document.body.append(el);
+            const value = getComputedStyle(el)[prop as never] as string;
+            el.remove();
+            return { cls, value };
+          });
+        }, probes);
 
-  const failures = results
-    .filter((r, i) => r.value !== probes[i].expect)
-    .map((r, i) => `${r.cls}: got ${r.value}, expected ${probes[i].expect}`);
-
-  expect(failures, failures.join('; ')).toEqual([]);
+        return results
+          .filter((r, i) => r.value !== probes[i].expect)
+          .map(
+            (r, i) => `${r.cls}: got ${r.value}, expected ${probes[i].expect}`
+          );
+      },
+      { message: 'utilities that emitted no CSS' }
+    )
+    .toEqual([]);
 });
 
 test('focus-visible produces a visible outline', async ({ page }) => {

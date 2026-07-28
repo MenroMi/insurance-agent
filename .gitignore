@@ -32,3 +32,6 @@ tsconfig.tsbuildinfo
 /test-results/
 /playwright-report/
 /blob-report/
+
+# Folders
+/docs/LEARNINGS.md

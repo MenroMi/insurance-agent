@@ -27,6 +27,16 @@
   --color-footer-faint: #7893a6;
 
   /*
+   * Hero decoration, carried over from styles.css lines 172-283. Same reason as
+   * the footer four: the brief's palette never listed them, and raw hex in the
+   * component would hide them from the design phase.
+   */
+  --color-glow-blue: #b8dff5;
+  --color-glow-gold: #f1dfba;
+  --color-hero-badge-line: #ccdeeb;
+  --color-hero-fineprint: #8190a1;
+
+  /*
    * DEFERRED DEBT, must be revisited before launch.
    * All 12 radius values from the legacy CSS, tokenised but NOT unified.
    * Kept distinct on purpose so the migration stays visually verifiable against
@@ -50,6 +60,9 @@
 
   /* Container */
   --container-site: 1180px;
+
+  /* Marquee under the hero; the strip is rendered twice, so it loops at -50% */
+  --animate-marquee: marquee 26s linear infinite;
 
   /*
    * DEFERRED DEBT, must be revisited before launch.
@@ -103,5 +116,11 @@
     html {
       scroll-behavior: auto;
     }
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
   }
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { DM_Sans, Manrope, Playfair_Display } from 'next/font/google';
-import SiteFooter from '@/components/SiteFooter';
-import SiteHeader from '@/components/SiteHeader';
-import SkipLink from '@/components/SkipLink';
+import { SiteFooter } from '@/components/layout/SiteFooter';
+import { SiteHeader } from '@/components/layout/SiteHeader';
+import { SkipLink } from '@/components/layout/SkipLink';
 import './globals.css';
 
 // The latin-ext subset is required for Polish diacritics

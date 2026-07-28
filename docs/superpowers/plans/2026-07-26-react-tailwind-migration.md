@@ -112,9 +112,10 @@ src/                            everything the app imports; @/* resolves here
     privacy-policy/
       page.tsx                  legal placeholder (retire item 26)
   components/                   shared across routes
-    SiteHeader.tsx        [c]   nav toggle, active link
-    SiteFooter.tsx
-    SkipLink.tsx
+    layout/                     mounted by app/layout.tsx, not by any page
+      SiteHeader.tsx      [c]   nav toggle, active link
+      SiteFooter.tsx
+      SkipLink.tsx
     Reveal.tsx            [c]   scroll reveal, children stay server-rendered
   content/
     nav.ts                      nav items, single source for labels
@@ -137,6 +138,16 @@ vitest.config.ts  playwright.config.ts  package.json              root
 ```
 
 Two placement rules that are not preferences: Next.js requires `public/` at the project root, so it does not move under `src/`. And `@/*` maps to `./src/*` in both `tsconfig.json` and `vitest.config.ts`; if those two disagree, imports resolve in the editor and fail in tests.
+
+**Export convention, user decision 2026-07-28, overriding the code in Tasks 7 to 15 below:** every
+component is a **named** export written as an arrow const, `export const Hero = () => {`, imported
+as `import { Hero } from '...'`. Only `page.tsx`, `layout.tsx` and the other Next file conventions
+keep a default export, because the framework requires it. The snippets further down still show
+`export default function`; translate them as you go.
+
+`src/components/layout/` holds the three pieces that `app/layout.tsx` mounts and no page imports.
+`Reveal` stays one level up in `src/components/`: it is a primitive that route sections use, not
+part of the shell.
 
 Split rationale: content modules are separated from presentation because the brief's deferred design work will rewrite every component while leaving copy untouched. Route-specific components sit beside their route so the folder itself records the blast radius of a change; only genuinely shared pieces earn a place in top-level `src/components/`.
 
@@ -934,7 +945,7 @@ export const insurancePartners = [
   { name: "Vienna Life", file: "vienna-life.svg" },
   { name: "ERGO Hestia", file: "ergo-hestia.svg" },
   { name: "PZU", file: "pzu.svg" },
-  { name: "Leadenhall", file: "leadenhall.svg" },
+  { name: "Leadenhall", file: "leadenhall.png" },
   { name: "UNIQA", file: "uniqa.svg" },
 ] as const;
 
@@ -964,7 +975,7 @@ export const marqueePartners = [
 ] as const;
 ```
 
-The three raster extensions are deliberate; the earlier cleanup pass corrected these paths after they pointed at non-existent `.svg` files.
+The raster extensions are deliberate. User rule, 2026-07-28: **where a logo exists in both raster and vector form, the raster file wins**, because a raster copy means the vector was either never found or looked wrong. Four files are affected: `compensa.png`, `bnp-paribas.png`, `leadenhall.png` and `pko-bp.jpg`. `leadenhall.svg` was deleted in Task 6 for this reason, even though the legacy page referenced it.
 
 `src/content/benefits.ts`:
 
@@ -1377,9 +1388,14 @@ The marquee becomes a sibling of the hero rather than a child, which is retire i
 
 - [ ] **Step 1: Move the assets with history preserved**
 
+`assets/logos` holds 23 files, not 22: `leadenhall` exists as both `.png` and `.svg`. Per the
+raster-wins rule recorded under Task 3, the `.svg` goes and `src/content/partners.ts` points at
+`leadenhall.png`.
+
 ```bash
 mkdir -p public/logos
 git mv assets/logos/*.svg assets/logos/*.png assets/logos/*.jpg public/logos/
+git rm public/logos/leadenhall.svg
 rmdir assets/logos assets
 ls public/logos | wc -l
 ```

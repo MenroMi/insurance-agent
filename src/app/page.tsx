@@ -1,3 +1,11 @@
+import { Hero } from '@/app/_components/Hero';
+import { PartnerMarquee } from '@/app/_components/PartnerMarquee';
+
 export default function HomePage() {
-  return <h1 className="text-3xl font-bold">Hanna Khudziakova</h1>;
+  return (
+    <main>
+      <Hero />
+      <PartnerMarquee />
+    </main>
+  );
 }
