@@ -337,6 +337,34 @@ Not design decisions, but they gate "done" in any stack:
   authored deliberately.
 - Exact professional title.
 
+### 8.4 How scroll reveals are driven
+
+The migration ships `src/components/Reveal.tsx` (Task 5), which replaces the legacy
+`.reveal { opacity: 0 }` plus single `IntersectionObserver` pattern. It is correct and both hard
+constraints are verified by test: content is visible with JavaScript off, and
+`prefers-reduced-motion` degrades to static rather than to a zero-length animation. It is not,
+however, the cheapest possible mechanism, and the design phase owns the choice.
+
+Cost of the shipped version, measured rather than assumed: `useInView` in `motion` 12.42.2 creates
+one `IntersectionObserver` per call (`framer-motion/dist/es/utils/use-in-view.mjs`), and the plan
+uses `<Reveal>` in 18 places, against one observer for all 28 elements in the legacy script. In
+practice this costs nothing measurable; observers are cheap. It is a tidiness question, not a
+performance one.
+
+Two alternatives, either of which is a change to that one file, because all 18 call sites only
+touch the `children` / `delay` / `className` API:
+
+- **One shared observer.** A subscription-based hook in place of an observer per instance, roughly
+  40 lines. Same public API, same behavior, 17 fewer objects.
+- **No JavaScript at all: `animation-timeline: view()`.** Scroll-driven reveals in pure CSS, no
+  hydration, wrapped in `@supports` so that unsupporting browsers simply get static content, which
+  is the same fallback reduced motion already gets. **Blocked on:** checking current browser
+  support against real data at decision time, not from memory. If support is acceptable, this
+  removes the primitive entirely.
+
+Decide during the design phase, when motion is being looked at as a whole. Nothing about this is
+urgent and nothing else depends on it.
+
 ---
 
 ## 9. Carried over from the earlier cleanup pass
