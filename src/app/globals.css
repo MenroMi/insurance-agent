@@ -36,6 +36,9 @@
   --color-hero-badge-line: #ccdeeb;
   --color-hero-fineprint: #8190a1;
 
+  /* Journey step tags, from styles.css line 984 */
+  --color-chip-ink: #45627b;
+
   /*
    * DEFERRED DEBT, must be revisited before launch.
    * All 12 radius values from the legacy CSS, tokenised but NOT unified.
