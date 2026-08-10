@@ -39,6 +39,9 @@
   /* Journey step tags, from styles.css line 984 */
   --color-chip-ink: #45627b;
 
+  /* Partner logo tile border, from styles.css line 574 */
+  --color-logo-line: #dce6ed;
+
   /*
    * DEFERRED DEBT, must be revisited before launch.
    * All 12 radius values from the legacy CSS, tokenised but NOT unified.

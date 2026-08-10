@@ -45,6 +45,25 @@ for (const width of [390, 1440]) {
   });
 }
 
+test('only the partner grids are exposed to assistive tech', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const counts = await page.evaluate(() => {
+    const imgs = [...document.querySelectorAll('img')];
+    return {
+      total: imgs.length,
+      exposed: imgs.filter((i) => i.getAttribute('aria-hidden') !== 'true')
+        .length,
+    };
+  });
+
+  // The marquee repeats nine of these logos twice as decoration. If those ever
+  // lose aria-hidden, a screen reader reads the partner list three times over.
+  expect(counts.exposed).toBe(22);
+  expect(counts.total).toBeGreaterThan(counts.exposed);
+});
+
 test('the marquee loops without a jump', async ({ page }) => {
   await page.goto('/');
   const mismatch = await page.evaluate(async () => {

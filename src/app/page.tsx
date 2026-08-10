@@ -1,6 +1,8 @@
 import { Hero } from '@/app/_components/Hero';
 import { Journey } from '@/app/_components/Journey';
 import { PartnerMarquee } from '@/app/_components/PartnerMarquee';
+import { Partners } from '@/app/_components/Partners';
+import { Services } from '@/app/_components/Services';
 
 export default function HomePage() {
   return (
@@ -8,6 +10,8 @@ export default function HomePage() {
       <Hero />
       <PartnerMarquee />
       <Journey />
+      <Services />
+      <Partners />
     </main>
   );
 }
