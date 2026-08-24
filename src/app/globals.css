@@ -53,6 +53,19 @@
   --color-consult-label: #89a2b7;
 
   /*
+   * The /about-me page, from styles.css lines 1064-1096. Same reason as the
+   * footer four: the brief's palette never listed them, so raw hex in the
+   * components would hide them from the design phase.
+   * --color-cta-body repeats the value of --color-footer-link on purpose; the
+   * two are unrelated roles that happen to share a hex today, and the design
+   * phase decides whether they stay equal.
+   */
+  --color-photo-blue: #dcecf7;
+  --color-photo-sand: #efe3d1;
+  --color-tile-label: #8797a8;
+  --color-cta-body: #bed0dd;
+
+  /*
    * DEFERRED DEBT, must be revisited before launch.
    * All 12 radius values from the legacy CSS, tokenised but NOT unified.
    * Kept distinct on purpose so the migration stays visually verifiable against
