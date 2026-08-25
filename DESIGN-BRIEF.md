@@ -331,10 +331,15 @@ Not design decisions, but they gate "done" in any stack:
 
 - Real phone number and email.
 - Professional photography of the advisor (2 slots).
-- Official Lendi widget embed code (blocks retire-list item 1).
+- Official Lendi widget embed code (blocks retire-list item 1, and through it item 27).
 - Legal texts: privacy policy and RODO notice. Required once the Lendi widget starts collecting
   personal data. Also section 11.F treats legal copy as never-silently-changed, so it must be
   authored deliberately.
+- Cookie consent and the cookie section of the privacy policy (retire item 27). The migration
+  plan's Task 16 owns this. It is deliberately not built yet: the site currently sets no cookie
+  and loads no third-party code, so there is nothing to consent to, and the obligation starts
+  with the Lendi embed. Must not be forgotten before launch; it was missing from the plan's
+  scoping split entirely until an audit on 2026-08-25.
 - Exact professional title.
 
 ### 8.4 How scroll reveals are driven

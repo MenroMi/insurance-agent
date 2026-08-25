@@ -41,11 +41,13 @@ Two consequences worth stating, because the obvious implementation gets both wro
 
 ## Scoping decision: what this migration does NOT do
 
-`DESIGN-BRIEF.md` carries a 30-item retire list. Doing all of it here would mean designing, which is explicitly deferred. The list is split:
+`DESIGN-BRIEF.md` carries a 28-item retire list. Doing all of it here would mean designing, which is explicitly deferred. The list is split:
 
 **In scope (stack-level, non-aesthetic, cheap):** items 2 (em-dashes), 4 (CTA label unification), 7 (marquee out of hero), 10 (Phosphor icons), 11 (`next/font`), 16 (`:focus-visible`), 17 (`:active`), 18 (skip-link), 20 (`text-wrap`), 21 (tabular figures), 22 (`ch` measure), 25 (GPU-safe progress), 26 (legal links), 28 (404). Plus the SEO gaps from brief section 7.
 
 **Out of scope, deferred to the design phase:** items 1 (Lendi widget, blocked on real embed code), 3 (eyebrow reduction), 5 (3-column cards), 6 (hero recomposition), 8 (theme lock), 9 (radius scale consolidation), 12 (dark mode), 13 (real contacts, blocked), 14 and 15 (photography, blocked on assets), 19 (form states, blocked on item 1), 23 (card look), 24 (button pairing).
+
+**Its own phase, after the migration:** item 27 (cookie consent). Task 16 below. Added 2026-08-25, after an audit found item 27 assigned to neither bucket above; it was the only item in the list that no task or deferral covered.
 
 Item 9 is partially handled: the 12 radius values get encoded as `@theme` tokens so consolidating them later is a token edit, not a sweep.
 
@@ -3215,6 +3217,42 @@ In `DESIGN-BRIEF.md` section 4, tick the boxes for items 2, 4, 7, 10, 11, 16, 17
 git add -A
 git commit -m "refactor: retire the vanilla implementation after verifying parity"
 ```
+
+---
+
+### Task 16: Cookie consent and the cookie section of the privacy policy
+
+Retire item 27. **Added 2026-08-25.** The item existed in the brief from the start but the
+original scoping section placed it in neither the in-scope nor the deferred list, so no task
+owned it. It is recorded here so it cannot be lost again.
+
+**Runs after Task 15, and is BLOCKED, deliberately.** Two blockers, both external:
+
+1. **The Lendi widget embed code (retire item 1).** This is the gating one. As the site stands
+   today it loads no third-party code at all: fonts are self-hosted via `next/font` (retire item
+   11), there is no analytics, and no cookie of any kind is set. With no non-essential cookie
+   there is nothing to ask consent for, and a banner that appears anyway is the exact dark
+   pattern the GDPR/RODO guidance warns against. The obligation begins the moment the widget
+   lands, because that is when third-party code starts running.
+2. **The legal texts** (`DESIGN-BRIEF.md` section 8.3). The cookie section of the privacy policy
+   is legal copy and must be written or approved by a human; section 11.F forbids generating or
+   silently changing it. Task 12 ships the policy route as an explicitly labeled placeholder for
+   this reason.
+
+**Scope when unblocked:**
+
+- A consent gate that blocks the Lendi widget from loading until consent is given, rather than a
+  banner that appears after the third-party code has already run. Consent must be as easy to
+  refuse as to accept, and revocable afterwards.
+- The stored decision, and how long it lasts.
+- The cookie section of `/privacy-policy`: what each cookie is, who sets it, how long it lives.
+  Human-authored.
+- Remove `robots: { index: false }` from the privacy route once it carries real content; Task 12
+  sets it precisely because an empty legal page should not be indexed.
+
+**Do not start this before the widget embed code exists.** Building a consent flow against a
+guess at what the widget sets would have to be rewritten once the real thing arrives, and a
+consent record that does not match the actual cookies is worse than none.
 
 ---
 
