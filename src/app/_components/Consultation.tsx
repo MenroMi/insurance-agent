@@ -23,7 +23,7 @@ export const Consultation = () => {
             <p className="mb-3 font-label text-xs font-extrabold uppercase tracking-[0.15em] text-accent-soft">
               Bezpłatna konsultacja
             </p>
-            <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em]">
+            <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em] font-bold">
               Zacznij od krótkiej rozmowy.
             </h2>
             <p className="max-w-[65ch] text-consult-body">

@@ -11,7 +11,7 @@ export const Journey = () => {
           <p className="mb-3 font-label text-xs font-extrabold uppercase tracking-[0.15em] text-primary">
             Jak wygląda współpraca
           </p>
-          <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em]">
+          <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em] font-bold">
             Od pierwszego kontaktu do decyzji, bez chaosu i bez presji.
           </h2>
           <p className="max-w-[65ch] text-lg text-muted">
@@ -48,9 +48,7 @@ export const Journey = () => {
                 <span className="font-label text-[11px] font-extrabold uppercase tracking-[0.12em] text-primary">
                   {step.kicker}
                 </span>
-                <h3 className="mb-2 mt-1.5 font-display text-2xl">
-                  {step.title}
-                </h3>
+                <h3 className="mb-2 mt-1.5 text-2xl font-bold">{step.title}</h3>
                 <p className="max-w-[65ch] text-muted">{step.body}</p>
                 <div className="mt-4.5 flex flex-wrap gap-2">
                   {step.tags.map((tag) => (

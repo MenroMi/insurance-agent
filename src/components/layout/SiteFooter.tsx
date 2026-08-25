@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { FooterYear } from '@/components/layout/FooterYear';
 import { contact } from '@/content/contact';
 import { site } from '@/content/site';
 
@@ -57,9 +58,7 @@ export const SiteFooter = () => {
 
       <div className="mx-auto mt-10 flex w-[min(100%-40px,var(--container-site))] flex-col gap-1.5 border-t border-white/10 pt-5 text-[11px] text-footer-faint md:flex-row md:justify-between">
         <span>
-          &copy;{' '}
-          <span suppressHydrationWarning>{new Date().getFullYear()}</span>{' '}
-          {site.name}
+          &copy; <FooterYear buildYear={new Date().getFullYear()} /> {site.name}
         </span>
       </div>
     </footer>

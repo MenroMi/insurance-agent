@@ -4,6 +4,7 @@ import { AboutHero } from '@/app/about-me/_components/AboutHero';
 import { AboutWorking } from '@/app/about-me/_components/AboutWorking';
 import AboutPage from '@/app/about-me/page';
 import { contact } from '@/content/contact';
+import { renderedText } from '../helpers/renderedText';
 import { collectStrings, findDashViolations } from '../helpers/dashGuard';
 
 describe('AboutHero', () => {
@@ -26,7 +27,7 @@ describe('AboutHero', () => {
     );
     // Retire item 13: the legacy fourth tile pointed at href="#".
     expect(container.querySelector('a[href="#"]')).toBeNull();
-    expect(container.textContent).not.toMatch(/facebook/i);
+    expect(renderedText(container)).not.toMatch(/facebook/i);
   });
 });
 
@@ -74,14 +75,14 @@ describe('the /about-me page', () => {
     const { container } = render(<AboutPage />);
     // Global Constraints: `kontakt` and `partnerzy` are ordinary Polish words as
     // well as former slugs. The renames must stay in hrefs only.
-    expect(container.textContent).not.toMatch(
+    expect(renderedText(container)).not.toMatch(
       /\b(contact|partners|services)\b/i
     );
   });
 
   it('carries no em-dash or en-dash in its copy', () => {
     const { container } = render(<AboutPage />);
-    expect(findDashViolations(collectStrings(container.textContent))).toEqual(
+    expect(findDashViolations(collectStrings(renderedText(container)))).toEqual(
       []
     );
   });

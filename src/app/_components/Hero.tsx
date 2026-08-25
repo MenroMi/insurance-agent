@@ -29,7 +29,7 @@ export const Hero = () => {
             Konsultacje online i stacjonarnie w Zielonej Górze
           </div>
 
-          <h1 className="mb-6.5 max-w-[760px] font-display text-[clamp(44px,5.2vw,66px)] leading-[1.06] tracking-[-0.028em]">
+          <h1 className="mb-6.5 max-w-[760px] font-display text-[clamp(44px,5.2vw,66px)] leading-[1.06] tracking-[-0.028em] font-bold">
             Finanse i ubezpieczenia dopasowane do Twojej sytuacji.
           </h1>
 

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Consultation } from '@/app/_components/Consultation';
 import { contact } from '@/content/contact';
+import { renderedText } from '../helpers/renderedText';
 
 describe('Consultation', () => {
   it('renders no fake form controls', () => {
@@ -40,6 +41,6 @@ describe('Consultation', () => {
     const { container } = render(<Consultation />);
     // Global Constraints: `kontakt` is an ordinary Polish word as well as the
     // former slug. The #contact rename must stay in hrefs only.
-    expect(container.textContent).not.toMatch(/\bcontact\b/i);
+    expect(renderedText(container)).not.toMatch(/\bcontact\b/i);
   });
 });

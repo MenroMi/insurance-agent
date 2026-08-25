@@ -34,7 +34,7 @@ export const AboutHero = () => {
           <p className="mb-3 font-label text-xs font-extrabold uppercase tracking-[0.15em] text-primary">
             Poznaj Hannę
           </p>
-          <h1 className="mt-2.5 mb-5 max-w-[720px] font-display text-[clamp(40px,4.6vw,58px)] leading-[1.06] tracking-[-0.028em]">
+          <h1 className="mt-2.5 mb-5 max-w-[720px] font-display text-[clamp(40px,4.6vw,58px)] leading-[1.06] tracking-[-0.028em] font-bold">
             Wierzę, że dobra decyzja finansowa zaczyna się od zrozumienia Twojej
             sytuacji.
           </h1>

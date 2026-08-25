@@ -26,7 +26,7 @@ export const Partners = () => {
             <p className="mb-3 font-label text-xs font-extrabold uppercase tracking-[0.15em] text-primary">
               Zakres współpracy
             </p>
-            <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em]">
+            <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em] font-bold">
               17 firm ubezpieczeniowych oraz 9 banków.
             </h2>
             <p className="max-w-[65ch] text-muted">
@@ -42,7 +42,7 @@ export const Partners = () => {
             <Reveal key={group.heading}>
               <div className="rounded-4xl border border-line bg-page p-7.5">
                 <div className="mb-5.5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <h3 className="font-display text-2xl">{group.heading}</h3>
+                  <h3 className="text-2xl font-bold">{group.heading}</h3>
                   <span className="text-xs tabular-nums text-muted">
                     {group.note}
                   </span>

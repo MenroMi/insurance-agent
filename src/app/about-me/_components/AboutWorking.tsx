@@ -34,7 +34,7 @@ export const AboutWorking = () => {
             <p className="mb-3 font-label text-xs font-extrabold uppercase tracking-[0.15em] text-primary">
               Jak pracuję
             </p>
-            <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em]">
+            <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em] font-bold">
               Czego możesz oczekiwać podczas współpracy?
             </h2>
             <p className="max-w-[65ch] text-muted">
@@ -57,7 +57,7 @@ export const AboutWorking = () => {
               <span className="font-label text-[11px] font-extrabold tracking-[0.12em] text-primary">
                 {featured.n}
               </span>
-              <h3 className="mt-4.5 mb-3 max-w-[500px] font-display text-[32px]">
+              <h3 className="mt-4.5 mb-3 max-w-[500px] text-[32px] font-bold">
                 {featured.title}
               </h3>
               <p className="max-w-[65ch] text-muted">{featured.body}</p>
@@ -71,9 +71,7 @@ export const AboutWorking = () => {
                   <span className="font-label text-[11px] font-extrabold tracking-[0.12em] text-primary">
                     {b.n}
                   </span>
-                  <h3 className="mt-2.5 mb-1.5 font-display text-xl">
-                    {b.title}
-                  </h3>
+                  <h3 className="mt-2.5 mb-1.5 text-xl font-bold">{b.title}</h3>
                   <p className="max-w-[65ch] text-[13px] text-muted">
                     {b.body}
                   </p>

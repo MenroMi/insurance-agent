@@ -31,7 +31,7 @@ export const Services = () => {
             <p className="mb-3 font-label text-xs font-extrabold uppercase tracking-[0.15em] text-primary">
               Zakres usług
             </p>
-            <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em]">
+            <h2 className="mb-4.5 font-display text-[clamp(38px,4.6vw,60px)] leading-[1.06] tracking-[-0.028em] font-bold">
               Wybierz temat, który chcesz uporządkować.
             </h2>
             <p className="max-w-[65ch] text-muted">
@@ -55,7 +55,7 @@ export const Services = () => {
                       className="text-primary"
                     />
                   </div>
-                  <h3 className="mb-2.5 mt-6 font-display text-[22px]">
+                  <h3 className="mb-2.5 mt-6 text-[22px] font-bold">
                     {service.title}
                   </h3>
                   <p className="max-w-[65ch] text-muted">{service.body}</p>
