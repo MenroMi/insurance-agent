@@ -106,6 +106,35 @@ describe('Tailwind arbitrary values', () => {
   });
 });
 
+describe('commented-out code', () => {
+  it('leaves no dead code behind in a comment', () => {
+    // Brief regression guard: the legacy CSS had zero commented-out rule
+    // blocks, and the migration must not introduce the habit.
+    //
+    // Backtick-quoted spans are stripped first. This codebase quotes code
+    // inside prose deliberately and often, for example the comment in
+    // Reveal.tsx that names the legacy `.reveal { opacity: 0 }` trap it exists
+    // to prevent. Flagging that would be flagging documentation, and a guard
+    // that fires on good comments gets deleted rather than obeyed.
+    const commentPattern = /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g;
+
+    const offenders = sourceFiles().flatMap(([path, body]) =>
+      (body.match(commentPattern) ?? [])
+        .map((comment) => comment.replace(/`[^`]*`/g, ''))
+        .filter(
+          (comment) =>
+            /className=/.test(comment) ||
+            /[.#\w][\w-]*\s*\{[^}]*:[^}]*;[^}]*\}/.test(comment)
+        )
+        .map(
+          (comment) => `${path}: ${comment.slice(0, 60).replace(/\s+/g, ' ')}`
+        )
+    );
+
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe('heading typography', () => {
   const headings = () =>
     sourceFiles().flatMap(([path, body]) =>
