@@ -1,7 +1,9 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import AboutPage from '@/app/about-me/page';
+import NotFound from '@/app/not-found';
 import HomePage from '@/app/page';
+import PrivacyPage from '@/app/privacy-policy/page';
 import { collectStrings, findDashViolations } from '../helpers/dashGuard';
 import { renderedText } from '../helpers/renderedText';
 import {
@@ -16,9 +18,16 @@ import {
  * catch it anywhere, including in the sections still to come (Tasks 12 to 15).
  */
 
+/*
+ * `labels` is empty for the two routes added by Task 12: retire items 26 and 28
+ * mean they have no legacy counterpart, so there is nothing to have dropped.
+ * The dash and slug guards below apply to them exactly as to the ported pages.
+ */
 const pages = [
   { name: 'home', node: <HomePage />, labels: legacyLabels.home },
   { name: 'about-me', node: <AboutPage />, labels: legacyLabels.about },
+  { name: '404', node: <NotFound />, labels: [] },
+  { name: 'privacy-policy', node: <PrivacyPage />, labels: [] },
 ] as const;
 
 describe.each(pages)('$name page', ({ node, labels }) => {
@@ -68,6 +77,29 @@ describe('Tailwind arbitrary values', () => {
           return hasGradient && bareColour;
         })
         .map(([match]) => `${path}: ${match}`)
+    );
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('never sizes anything to the static full viewport height', () => {
+    // Brief regression guard: the static full-viewport unit has zero
+    // occurrences, so the site has no iOS Safari viewport jump. Tailwind's
+    // `screen` scale resolves to exactly that unit, so the utility form
+    // reintroduces the bug silently. The sticky footer in layout.tsx uses the
+    // dynamic unit, which tracks the collapsing browser chrome instead.
+    //
+    // Scanned over className values only, not raw file text: a prose comment
+    // naming the unit it forbids is not a violation, and the first version of
+    // this guard failed on its own explanation.
+    const offenders = sourceFiles().flatMap(([path, body]) =>
+      [...body.matchAll(/className=(?:"([^"]*)"|\{`([^`]*)`\})/g)]
+        .map(([, quoted, templated]) => quoted ?? templated ?? '')
+        .flatMap((classes) =>
+          [...classes.matchAll(/\b(?:min-h|max-h|h)-screen\b|100vh/g)].map(
+            ([match]) => `${path}: ${match}`
+          )
+        )
     );
 
     expect(offenders).toEqual([]);

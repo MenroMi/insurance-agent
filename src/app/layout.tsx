@@ -44,10 +44,20 @@ export default function RootLayout({
       lang="pl"
       className={`${dmSans.variable} ${playfair.variable} ${manrope.variable}`}
     >
-      <body>
+      {/*
+        A sticky footer, so a page whose content does not fill the screen still
+        puts the footer on the bottom edge instead of leaving a band of page
+        background beneath it. The wrapper takes the leftover space; the page's
+        own <main> is inside it.
+
+        `dvh`, never `vh`: the brief's regression guard records zero occurrences
+        of 100vh precisely because it causes the iOS Safari viewport jump when
+        the browser chrome collapses. The dynamic unit tracks that chrome.
+      */}
+      <body className="flex min-h-dvh flex-col">
         <SkipLink />
         <SiteHeader />
-        {children}
+        <div className="flex-1">{children}</div>
         <SiteFooter />
       </body>
     </html>
