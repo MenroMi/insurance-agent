@@ -103,13 +103,13 @@ Ordered by weight of violation. Tick during migration.
 - [ ] **1. Fake Lendi form built from `<div>`** (`.fake-field`, `.fake-check` "□", dead
       `.widget-button`). Section 9.F calls div-based fake product UI "the #1 LLM-design Tell".
       Hard ban. Either embed the real Lendi widget or use a clearly labeled placeholder slot.
-- [ ] **2. Nine em-dashes** (7 in `index.html`, 2 in `poznaj-hanne.html`). Section 9.G is zero
+- [x] **2. Nine em-dashes** (7 in `index.html`, 2 in `poznaj-hanne.html`). Section 9.G is zero
       tolerance. Each is a separate Pre-Flight Fail. Replace with period, comma, colon or
       restructure. Note: this ban applies to the Polish page copy, not to internal docs.
 - [ ] **3. Twelve eyebrows against a limit of 2.** Section 4.7, described in the skill as the
       most-violated rule. Present: `.eyebrow` x4, `.journey-kicker` x5, `.hero-kicker`,
       `.mini-label`, `.partners-label`. Limit is `ceil(5 sections / 3) = 2`.
-- [ ] **4. Nine CTAs with one intent, seven distinct labels.** Section 4.5 NO DUPLICATE CTA
+- [x] **4. Nine CTAs with one intent, seven distinct labels.** Section 4.5 NO DUPLICATE CTA
       INTENT is a Pre-Flight Fail. All resolve to `#contact`: "Bezpłatna konsultacja",
       "Umów bezpłatną konsultację" x2, "Umów analizę", "Sprawdź możliwości", "Porozmawiajmy",
       "Sprawdź zakres", "Umów konsultację", "Skontaktuj się". Pick ONE label, use it everywhere.
@@ -118,16 +118,16 @@ Ordered by weight of violation. Tick during migration.
 - [ ] **6. Hero carries 6 text elements against a limit of 4.** Section 4.7. `.hero-facts`
       (17 / 9 / 1 osoba) is a banned trust micro-strip inside the hero. `.hero-disclaimer` is a
       banned tagline below the CTAs. Both move to dedicated sections below the hero.
-- [ ] **7. Logo marquee sits inside `<section class="hero">`.** Section 4.7: the logo wall
+- [x] **7. Logo marquee sits inside `<section class="hero">`.** Section 4.7: the logo wall
       belongs under the hero, never inside it.
 - [ ] **8. Dark section mid-page.** `.consultation-copy` on `--primary-dark` inside an otherwise
       light page breaks the section 4.11 Page Theme Lock.
 - [ ] **9. Twelve distinct `border-radius` values** (50%, 999px, 34px, 32px, 30px, 24px, 18px,
       15px, 12px, 10px, 8px, plus one asymmetric). Section 4.4 SHAPE CONSISTENCY LOCK requires
       one documented scale.
-- [ ] **10. Emoji service icons** (heart, car, house, plane, office, bank). Sections 3.C and 3.D.
+- [x] **10. Emoji service icons** (heart, car, house, plane, office, bank). Sections 3.C and 3.D.
       Replace with `@phosphor-icons/react`. Section 9.E forbids hand-rolling SVG instead.
-- [ ] **11. Google Fonts via `<link>`.** Section 3.A: never in production. `next/font` on migration.
+- [x] **11. Google Fonts via `<link>`.** Section 3.A: never in production. `next/font` on migration.
       Also removes the EU data-transfer concern with the Google Fonts CDN.
 - [ ] **12. No dark mode.** Section 6.C: mandatory for consumer-facing pages.
 - [ ] **13. Placeholder content.** `+48 000 000 000` and `kontakt@twojadomena.pl` in 6 places,
@@ -151,22 +151,22 @@ Stack-independent only. CSS-level fixes were deliberately not applied.
 
 **Accessibility and interaction states**
 
-- [ ] **16. No `:focus-visible` anywhere.** Zero occurrences in 1146 lines. Keyboard navigation
+- [x] **16. No `:focus-visible` anywhere.** Zero occurrences in 1146 lines. Keyboard navigation
       falls back to the browser default, which is nearly invisible on the blue `.nav-cta`. The
       skill calls this "an accessibility requirement, not optional".
-- [ ] **17. No `:active` / pressed feedback.** Zero occurrences. Needs `scale(0.98)` or
+- [x] **17. No `:active` / pressed feedback.** Zero occurrences. Needs `scale(0.98)` or
       `translateY(1px)` on press.
-- [ ] **18. No skip-to-content link.** Essential for keyboard users.
+- [x] **18. No skip-to-content link.** Essential for keyboard users.
 - [ ] **19. No loading / empty / error states.** Currently moot because the form is fake, but it
       blocks retire-list item 1: the real Lendi widget needs all three, plus client-side validation.
 
 **Typography detail**
 
-- [ ] **20. No `text-wrap: balance` or `pretty`.** Polish headlines run long and produce orphans.
+- [x] **20. No `text-wrap: balance` or `pretty`.** Polish headlines run long and produce orphans.
       The h1 wraps to 4 lines at desktop.
-- [ ] **21. No tabular figures.** The page leans on numbers (17, 9, 1, 0 zł) with proportional
+- [x] **21. No tabular figures.** The page leans on numbers (17, 9, 1, 0 zł) with proportional
       digits. Add `font-variant-numeric: tabular-nums` where numbers align.
-- [ ] **22. Body measure set in px, not `ch`.** 700px at 19px runs roughly 75 characters;
+- [x] **22. Body measure set in px, not `ch`.** 700px at 19px runs roughly 75 characters;
       `.section-heading` is 790px. Target is ~65ch.
 
 **Component patterns**
@@ -180,15 +180,15 @@ Stack-independent only. CSS-level fixes were deliberately not applied.
 
 **Performance**
 
-- [ ] **25. `.journey-progress` animates `height`.** The only non-GPU animated property in the
+- [x] **25. `.journey-progress` animates `height`.** The only non-GPU animated property in the
       project (`transition: height .45s ease`, driven from `script.js`). Rebuild as
       `transform: scaleY()` with `transform-origin: top`.
 
 **Legal and completeness (jurisdiction: Poland / EU)**
 
-- [ ] **26. No legal links in the footer.** Privacy policy and terms.
+- [x] **26. No legal links in the footer.** Privacy policy and terms.
 - [ ] **27. No cookie consent.** Required once the Lendi widget loads third-party code.
-- [ ] **28. No custom 404 page.**
+- [x] **28. No custom 404 page.**
 
 ### Passed the audit, leave alone
 
@@ -389,13 +389,17 @@ paths repaired, "Strong główna" typo, `scroll-padding-top` for the sticky head
 
 Still open and stack-independent:
 
-- [ ] **Content is invisible without JS.** `.reveal { opacity: 0 }` is cleared only by
+- [x] **Content is invisible without JS.** `.reveal { opacity: 0 }` is cleared only by
       `script.js`. Any script error hides the hero, services and partners. In React this becomes
       a Motion `initial`/`whileInView` concern; the equivalent trap exists there. Section 5.C
       canonical skeleton handles it via `initial={reduce ? false : ...}`.
-- [ ] **Reduced-motion implementation needs rework.** The current block kills transitions with
-      `transition-duration: .01ms`. The `review-animations` standard 8 requires "gentler, not
-      zero: keep opacity/color, drop movement". Redo when motion is rebuilt.
+- [x] **Reduced-motion implementation needs rework.** The blanket
+      `transition-duration: .01ms` block is gone; `globals.css` now only resets
+      `scroll-behavior`, and each moving piece handles the preference itself
+      (`Reveal`, `JourneyTrack`, `PartnerMarquee`), degrading to static rather than to a
+      zero-length animation. Ticked on that basis. The finer "gentler, not zero: keep
+      opacity/color, drop movement" refinement is motion design and belongs to the design
+      phase, together with section 8.4.
 
 ---
 
@@ -406,5 +410,6 @@ Still open and stack-independent:
 - Animation fix plans. `improve-animations` writes plans citing exact file paths and code
   excerpts; against the discarded `styles.css` they would be stale on arrival. Run it after
   migration.
-- The stack-independent omissions sweep (favicon, legal links, 404, skip-link, OG). Pending run of
-  `redesign-existing-projects` in diagnose mode; findings append to section 4 above.
+- The stack-independent omissions sweep (favicon, legal links, 404, skip-link, OG) has RUN. Its
+  findings are section 4's Batch 2, items 14 to 28, and every one of them that the migration took
+  in scope is now ticked there.
