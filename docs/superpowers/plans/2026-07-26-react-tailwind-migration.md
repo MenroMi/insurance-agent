@@ -4,7 +4,7 @@
 
 **Goal:** Port the existing 2-page vanilla HTML/CSS site to Next.js + Tailwind v4 with byte-faithful content, unchanged IA, and the cheap correctness/a11y/legal wins folded in, producing a verified baseline for the design phase.
 
-**Architecture:** Next.js 15 App Router, statically rendered. All page copy moves out of markup into typed modules under `content/`, so duplication (contact placeholders, the repeated 17/9/1 figures) becomes visible and single-sourced. Design tokens from `DESIGN-BRIEF.md` section 3 land in a Tailwind v4 `@theme` block. The migration is deliberately **visually faithful**: same fonts, same palette, same composition. That is what makes it verifiable. Aesthetic change happens afterwards, on a green baseline.
+**Architecture:** Next.js 15 App Router, statically rendered. All page copy moves out of markup into typed modules under `src/content/`, so duplication (contact placeholders, the repeated 17/9/1 figures) becomes visible and single-sourced. Design tokens from `DESIGN-BRIEF.md` section 3 land in a Tailwind v4 `@theme` block. The migration is deliberately **visually faithful**: same fonts, same palette, same composition. That is what makes it verifiable. Aesthetic change happens afterwards, on a green baseline.
 
 **Tech Stack:** Next.js 15 (App Router, TypeScript), Tailwind v4 via `@tailwindcss/postcss`, `motion` (`motion/react`), `@phosphor-icons/react` 2.1.10, `next/font/google`, Vitest + React Testing Library (component behavior), Playwright (regression guard).
 
@@ -12,9 +12,15 @@
 
 Two decisions, recorded explicitly because they are choices rather than framework requirements.
 
-**What Next.js actually mandates:** the routing conventions inside `app/` (folder name equals URL segment; the reserved files `page.tsx`, `layout.tsx`, `not-found.tsx`, `sitemap.ts`, `robots.ts`, `icon.svg`) and the Server/Client boundary. Nothing else. The `content/`, `lib/` and `components/` folders are this project's invention.
+**What Next.js actually mandates:** the routing conventions inside `src/app/` (folder name equals URL segment; the reserved files `page.tsx`, `layout.tsx`, `not-found.tsx`, `sitemap.ts`, `robots.ts`, `icon.svg`) and the Server/Client boundary. Nothing else. The `src/content/`, `src/lib/` and `src/components/` folders are this project's invention.
 
-**Decision 1, file layout: hybrid colocation.** Shared building blocks live in top-level `components/`. Anything used by exactly one route lives next to that route in `app/<route>/_components/`. The leading underscore is a Next convention that opts the folder out of routing. The point is that the folder a component sits in tells you whether it is safe to change: touching `app/_components/Hero.tsx` cannot affect `/poznaj-hanne`, and touching `components/Reveal.tsx` can affect everything.
+**Decision 1, file layout: `src/` root plus hybrid colocation.** Chosen by the user on 2026-07-26.
+
+Application code lives under `src/`, which keeps it separate from repository furniture (`DESIGN-BRIEF.md`, `docs/`, config files, the legacy site until Task 15 removes it). Next.js supports `src/app` as a first-class alternative to a root-level `app/`; `public/` is the exception and must stay at the root.
+
+Within `src/`, shared building blocks live in `src/components/`. Anything used by exactly one route lives next to that route in `src/app/<route>/_components/`. The leading underscore is a Next convention that opts the folder out of routing. The point is that the folder a component sits in tells you whether it is safe to change: touching `src/app/_components/Hero.tsx` cannot affect `/about-me`, and touching `src/components/Reveal.tsx` can affect everything.
+
+Note that `@/*` maps to `./src/*`, so alias imports carry no `src` segment: the file at `src/app/_components/Hero.tsx` is imported as `@/app/_components/Hero`. Both `tsconfig.json` and `vitest.config.ts` must agree on that mapping.
 
 **Decision 2, the Server/Client boundary.** Server Components by default. `"use client"` appears only on the smallest possible leaf that genuinely needs browser APIs, and server-rendered markup reaches those leaves as `children`.
 
@@ -22,9 +28,9 @@ Only three files in this plan carry `"use client"`:
 
 | Client leaf | Why it must be | What stays on the server |
 |---|---|---|
-| `components/SiteHeader.tsx` | `useState` for the mobile menu, `usePathname` for the active link | nothing; the header is small |
-| `components/Reveal.tsx` | `useInView` plus a post-hydration mount flag | **all of its `children`**, which is why the no-JavaScript test in Task 14 can pass |
-| `app/_components/JourneyTrack.tsx` | `useScroll` and `useSpring` for the progress bar | the five step cards, passed in as `children` |
+| `src/components/SiteHeader.tsx` | `useState` for the mobile menu, `usePathname` for the active link | nothing; the header is small |
+| `src/components/Reveal.tsx` | `useInView` plus a post-hydration mount flag | **all of its `children`**, which is why the no-JavaScript test in Task 14 can pass |
+| `src/app/_components/JourneyTrack.tsx` | `useScroll` and `useSpring` for the progress bar | the five step cards, passed in as `children` |
 
 A Client Component cannot import a Server Component, but it can receive server-rendered JSX through props. That single fact is what keeps the client bundle to a menu toggle, a viewport observer and a scroll spring.
 
@@ -35,11 +41,13 @@ Two consequences worth stating, because the obvious implementation gets both wro
 
 ## Scoping decision: what this migration does NOT do
 
-`DESIGN-BRIEF.md` carries a 30-item retire list. Doing all of it here would mean designing, which is explicitly deferred. The list is split:
+`DESIGN-BRIEF.md` carries a 28-item retire list. Doing all of it here would mean designing, which is explicitly deferred. The list is split:
 
 **In scope (stack-level, non-aesthetic, cheap):** items 2 (em-dashes), 4 (CTA label unification), 7 (marquee out of hero), 10 (Phosphor icons), 11 (`next/font`), 16 (`:focus-visible`), 17 (`:active`), 18 (skip-link), 20 (`text-wrap`), 21 (tabular figures), 22 (`ch` measure), 25 (GPU-safe progress), 26 (legal links), 28 (404). Plus the SEO gaps from brief section 7.
 
 **Out of scope, deferred to the design phase:** items 1 (Lendi widget, blocked on real embed code), 3 (eyebrow reduction), 5 (3-column cards), 6 (hero recomposition), 8 (theme lock), 9 (radius scale consolidation), 12 (dark mode), 13 (real contacts, blocked), 14 and 15 (photography, blocked on assets), 19 (form states, blocked on item 1), 23 (card look), 24 (button pairing).
+
+**Its own phase, after the migration:** item 27 (cookie consent). Task 16 below. Added 2026-08-25, after an audit found item 27 assigned to neither bucket above; it was the only item in the list that no task or deferral covered.
 
 Item 9 is partially handled: the 12 radius values get encoded as `@theme` tokens so consolidating them later is a token edit, not a sweep.
 
@@ -49,18 +57,30 @@ Item 9 is partially handled: the 12 radius values get encoded as `@theme` tokens
 
 ## Global Constraints
 
-Copied verbatim from `DESIGN-BRIEF.md`. Every task's requirements implicitly include this section.
+Derived from `DESIGN-BRIEF.md`, with the URL rule overridden by explicit user decision on 2026-07-26. Every task's requirements implicitly include this section.
 
-- **Anchor IDs unchanged:** `#top`, `#jak-dzialam`, `#uslugi`, `#partnerzy`, `#kontakt`.
-- **Primary nav labels unchanged:** `Strona główna`, `Poznaj Hannę`, `Usługi`, `Partnerzy`, `Bezpłatna konsultacja`.
-- **Copy voice unchanged.** Visual modernisation is not a content rewrite. Port Polish strings character for character except where a task explicitly says otherwise.
+- **All URLs and anchor fragments are English; all user-visible copy stays Polish.** This overrides the brief's "keep anchor IDs stable" rule (section 11.C), approved explicitly because brief section 7 records no indexed SEO baseline to lose. The mapping, applied once and then fixed:
+
+  | Legacy | This project |
+  |---|---|
+  | `poznaj-hanne.html` | `/about-me` |
+  | (none) | `/privacy-policy` |
+  | `#jak-dzialam` | `#how-it-works` |
+  | `#uslugi` | `#services` |
+  | `#partnerzy` | `#partners` |
+  | `#kontakt` | `#contact` |
+  | `#top` | `#top` (already English) |
+
+- **Primary nav labels unchanged, in Polish:** `Strona główna`, `Poznaj Hannę`, `Usługi`, `Partnerzy`, `Bezpłatna konsultacja`. Only their `href` values changed. A nav label and its URL are independent: `{ label: "Usługi", href: "/#services" }` is correct.
+- **Copy voice unchanged.** Visual modernisation is not a content rewrite. Port Polish strings character for character except where a task explicitly says otherwise. **Never let a URL rename touch prose:** `kontakt`, `partnerzy` and `usługi` are ordinary Polish words as well as former slugs. Strings like `Wybrani partnerzy`, `Skontaktuję się z Tobą`, `jedna osoba do kontaktu` and `bezpośredni kontakt` keep their Polish spelling.
 - **Zero em-dashes (`—`) and zero en-dashes (`–`) in any user-visible string.** Non-negotiable per brief retire item 2. Permitted dash characters: regular hyphen `-` only.
 - **`lang="pl"` on the html element.**
 - **`prefers-reduced-motion` honored in "degrade to static" form**, not by zeroing transition durations. `MOTION_INTENSITY: 4` is above 3, so this is mandatory.
 - **Do not regress the 14 items in the brief's "Regression guard" table.** Task 14 encodes them as automated assertions.
-- **URL structure:** `poznaj-hanne.html` becomes `/poznaj-hanne`. This is a URL change flagged in brief section 2 as requiring explicit approval. Confirm before Task 11.
 - **Polish diacritics:** every font must load the `latin-ext` subset. Brief section 8.2 records that per-face coverage was never verified; `latin-ext` is the mechanism, Task 2 Step 4 is the verification.
 - **Node 24.17.0, npm 11.13.0** confirmed present.
+- **Branch:** all work lands on `migration/next-tailwind`, never on `main`.
+- **Every dependency version is pinned exactly. No `^`, no `~`, no ranges.** User decision, 2026-07-26, after an unpinned `typescript` resolved to 7.0.2 and broke `next build` on the `next.config.ts` loader. `.npmrc` sets `save-exact=true` so `npm install <pkg>` pins automatically; do not rely on remembering to strip the caret. If you add a dependency, verify `package.json` records a bare version like `"motion": "12.42.2"` before committing. If a pinned version turns out to be broken, report it as a concern with the failing output rather than widening the range.
 
 ---
 
@@ -69,52 +89,69 @@ Copied verbatim from `DESIGN-BRIEF.md`. Every task's requirements implicitly inc
 `[c]` marks a Client Component. Everything unmarked is a Server Component.
 
 ```
-app/
-  layout.tsx                    root html/body, fonts, metadata base, shell
-  page.tsx                      Strona główna, composes the home sections
-  globals.css                   Tailwind import + @theme tokens + base layer
-  not-found.tsx                 custom 404 (retire item 28)
-  sitemap.ts                    generated sitemap
-  robots.ts                     generated robots.txt
-  icon.svg                      favicon monogram
-  _components/                  used only by the home route
-    Hero.tsx
-    PartnerMarquee.tsx          sibling of Hero, not child (retire item 7)
-    Journey.tsx                 wraps its steps in JourneyTrack
-    JourneyTrack.tsx      [c]   useScroll progress, steps arrive as children
-    Services.tsx                Phosphor icons via the /ssr entry
-    Partners.tsx                two logo grids
-    Consultation.tsx            Lendi placeholder slot
-  poznaj-hanne/
-    page.tsx                    advisor page
-    _components/                used only by this route
-      AboutHero.tsx
-      AboutWorking.tsx
-  polityka-prywatnosci/
-    page.tsx                    legal placeholder (retire item 26)
-components/                     shared across routes
-  SiteHeader.tsx          [c]   nav toggle, active link
-  SiteFooter.tsx
-  SkipLink.tsx
-  Reveal.tsx              [c]   scroll reveal, children stay server-rendered
-content/
-  nav.ts                        nav items, single source for labels
-  contact.ts                    phone/email/location, single source
-  services.ts                   6 service entries
-  journey.ts                    5 journey steps
-  partners.ts                   13 insurance + 9 bank + marquee subset
-  benefits.ts                   4 benefit cards
-  site.ts                       site name, description, base URL
-lib/
-  assertNoEmDash.ts             shared guard used by content tests
-public/
+src/                            everything the app imports; @/* resolves here
+  app/
+    layout.tsx                  root html/body, fonts, metadata base, shell
+    page.tsx                    Strona główna, composes the home sections
+    globals.css                 Tailwind import + @theme tokens + base layer
+    not-found.tsx               custom 404 (retire item 28)
+    sitemap.ts                  generated sitemap
+    robots.ts                   generated robots.txt
+    icon.svg                    favicon monogram
+    _components/                used only by the home route
+      Hero.tsx
+      PartnerMarquee.tsx        sibling of Hero, not child (retire item 7)
+      Journey.tsx               wraps its steps in JourneyTrack
+      JourneyTrack.tsx    [c]   useScroll progress, steps arrive as children
+      Services.tsx              Phosphor icons via the /ssr entry
+      Partners.tsx              two logo grids
+      Consultation.tsx          Lendi placeholder slot
+    about-me/
+      page.tsx                  advisor page
+      _components/              used only by this route
+        AboutHero.tsx
+        AboutWorking.tsx
+    privacy-policy/
+      page.tsx                  legal placeholder (retire item 26)
+  components/                   shared across routes
+    layout/                     mounted by app/layout.tsx, not by any page
+      SiteHeader.tsx      [c]   nav toggle, active link
+      SiteFooter.tsx
+      SkipLink.tsx
+    Reveal.tsx            [c]   scroll reveal, children stay server-rendered
+  content/
+    nav.ts                      nav items, single source for labels
+    contact.ts                  phone/email/location, single source
+    services.ts                 6 service entries
+    journey.ts                  5 journey steps
+    partners.ts                 13 insurance + 9 bank + marquee subset
+    benefits.ts                 4 benefit cards
+    site.ts                     site name, description, base URL
+
+public/                         MUST stay at the repo root, not under src/
   logos/                        22 files, git mv from assets/logos
-tests/
+tests/                          not app source, so kept out of src/
+  helpers/dashGuard.ts          shared guard used by content tests
   unit/                         Vitest + RTL
   e2e/regression-guard.spec.ts  Playwright, encodes the brief's regression guard
+
+next.config.ts  tsconfig.json  postcss.config.mjs                 root
+vitest.config.ts  playwright.config.ts  package.json              root
 ```
 
-Split rationale: content modules are separated from presentation because the brief's deferred design work will rewrite every component while leaving copy untouched. Route-specific components sit beside their route so the folder itself records the blast radius of a change; only genuinely shared pieces earn a place in top-level `components/`.
+Two placement rules that are not preferences: Next.js requires `public/` at the project root, so it does not move under `src/`. And `@/*` maps to `./src/*` in both `tsconfig.json` and `vitest.config.ts`; if those two disagree, imports resolve in the editor and fail in tests.
+
+**Export convention, user decision 2026-07-28, overriding the code in Tasks 7 to 15 below:** every
+component is a **named** export written as an arrow const, `export const Hero = () => {`, imported
+as `import { Hero } from '...'`. Only `page.tsx`, `layout.tsx` and the other Next file conventions
+keep a default export, because the framework requires it. The snippets further down still show
+`export default function`; translate them as you go.
+
+`src/components/layout/` holds the three pieces that `app/layout.tsx` mounts and no page imports.
+`Reveal` stays one level up in `src/components/`: it is a primitive that route sections use, not
+part of the shell.
+
+Split rationale: content modules are separated from presentation because the brief's deferred design work will rewrite every component while leaving copy untouched. Route-specific components sit beside their route so the folder itself records the blast radius of a change; only genuinely shared pieces earn a place in top-level `src/components/`.
 
 **Testing split:** Vitest + RTL covers client components and content invariants. Page-level and cross-cutting assertions go to Playwright, because async server components are awkward to render in jsdom. Do not fight that boundary.
 
@@ -125,7 +162,7 @@ Split rationale: content modules are separated from presentation because the bri
 Scaffolded by hand rather than `create-next-app`, because the directory is non-empty (the legacy site and git history stay in place until Task 15) and `create-next-app` aborts on conflicts.
 
 **Files:**
-- Create: `package.json`, `next.config.ts`, `tsconfig.json`, `postcss.config.mjs`, `vitest.config.ts`, `tests/setup.ts`, `app/layout.tsx`, `app/page.tsx`, `app/globals.css`, `.gitignore` (modify)
+- Create: `package.json`, `next.config.ts`, `tsconfig.json`, `postcss.config.mjs`, `vitest.config.ts`, `tests/setup.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `.gitignore` (modify)
 - Test: `tests/unit/smoke.test.tsx`
 
 **Interfaces:**
@@ -184,7 +221,7 @@ Replace the `scripts` block in `package.json` with:
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./*"] }
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
@@ -229,7 +266,9 @@ export default defineConfig({
     globals: true,
   },
   resolve: {
-    alias: { "@": path.resolve(__dirname, ".") },
+    // Must match tsconfig's "@/*": ["./src/*"] or imports resolve in the
+    // editor but fail in tests.
+    alias: { "@": path.resolve(__dirname, "./src") },
   },
 });
 ```
@@ -258,13 +297,13 @@ next-env.d.ts
 
 - [ ] **Step 5: Write the minimal app shell**
 
-`app/globals.css`:
+`src/app/globals.css`:
 
 ```css
 @import "tailwindcss";
 ```
 
-`app/layout.tsx`:
+`src/app/layout.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -283,7 +322,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-`app/page.tsx`:
+`src/app/page.tsx`:
 
 ```tsx
 export default function HomePage() {
@@ -322,19 +361,53 @@ Expected: build succeeds, output lists `/` as a static route.
 
 Run: `npm run dev`, open `http://127.0.0.1:3000`, confirm the heading renders large and bold (proves the Tailwind pipeline processes `text-3xl font-bold`). Stop the server.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 9: Capture the legacy visual baseline**
+
+**This must happen now, not in Task 15.** Task 6 moves `assets/logos/` to `public/logos/`, and the legacy `index.html` references `assets/logos/*`. After that move the legacy pages render with 22 broken images, so a baseline captured later is worthless and the migration loses its acceptance criterion. Nothing in Task 1 has touched the legacy files yet, so capture here.
+
+A plain `playwright screenshot` call is not sufficient and was already tried: it produced a baseline with roughly 60% of the page blank. Three conditions must hold at once, which is why this is a script rather than a command:
+
+1. **Reduced motion emulated.** The legacy `styles.css` hides every `.reveal` element at `opacity: 0` and clears it only from an IntersectionObserver callback, so an instant capture catches nothing revealed. The stylesheet's `@media (prefers-reduced-motion: reduce)` block forces them visible.
+2. **Scrolled to the bottom and back.** Partner logos use `loading="lazy"`; anything below the first viewport is never fetched for an instant capture, leaving empty cells in both logo grids.
+3. **Every image confirmed complete** before capturing, rather than trusting a fixed sleep.
+
+The script `scripts/capture-baseline.mjs` already exists in the repository and enforces all three, exiting non-zero if any `.reveal` element is still hidden.
+
+```bash
+python3 -m http.server 8099 >/dev/null 2>&1 &
+SRV=$!
+sleep 2
+node scripts/capture-baseline.mjs
+kill $SRV
+```
+
+Expected output, and all three lines must read `OK`:
+
+```
+  OK   legacy-home          1440px  images=40  reveals visible=19/19
+  OK   legacy-about         1440px  images=0   reveals visible=9/9
+  OK   legacy-home-mobile    390px  images=40  reveals visible=19/19
+```
+
+`images=40` is correct for the home page: 22 unique logos plus 18 marquee duplicates. `images=0` is correct for the advisor page, which has no images. A `FAIL` line means the baseline understates the page and must not be used for the Task 15 parity check.
+
+One known and acceptable artifact: the Leadenhall cell in the insurance grid appears empty. That logo is light-colored on transparency and effectively invisible under the legacy `grayscale opacity-70` treatment. It is a property of the source asset, reproduces identically in the migrated version, and therefore does not affect parity.
+
+- [ ] **Step 10: Commit**
 
 ```bash
 git add -A
 git commit -m "build: scaffold Next.js 15, Tailwind v4 and test tooling"
 ```
 
+The baseline PNGs live in `/tmp` deliberately: they are throwaway verification artifacts, not repository content.
+
 ---
 
 ### Task 2: Design tokens and fonts
 
 **Files:**
-- Modify: `app/globals.css`, `app/layout.tsx`
+- Modify: `src/app/globals.css`, `src/app/layout.tsx`
 - Create: `tests/e2e/tokens.spec.ts`
 
 **Interfaces:**
@@ -345,7 +418,7 @@ Token values are copied from `DESIGN-BRIEF.md` section 3. The name `ink` is used
 
 - [ ] **Step 1: Write the `@theme` block**
 
-Replace `app/globals.css` entirely:
+Replace `src/app/globals.css` entirely:
 
 ```css
 @import "tailwindcss";
@@ -366,8 +439,14 @@ Replace `app/globals.css` entirely:
   --color-surface-soft: #edf3f8;
   --color-surface-blue: #eaf4fb;
 
-  /* Radii: the 12 values from the legacy CSS. Consolidation is a design-phase
-     job (DESIGN-BRIEF.md retire item 9). Tokenised here, not yet unified. */
+  /*
+   * DEFERRED DEBT, must be revisited before launch.
+   * All 12 radius values from the legacy CSS, tokenised but NOT unified.
+   * Kept distinct on purpose so the migration stays visually verifiable against
+   * the Task 15 baseline. DESIGN-BRIEF.md retire item 9 requires collapsing
+   * these to one documented scale during the design phase; tokenising now means
+   * that becomes an edit to this block rather than a sweep through every file.
+   */
   --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 15px;
@@ -385,7 +464,17 @@ Replace `app/globals.css` entirely:
   /* Container */
   --container-site: 1180px;
 
-  /* Font families, injected by next/font */
+  /*
+   * DEFERRED DEBT, must be revisited before launch.
+   * These three faces are carried over from the legacy site ON PURPOSE, so the
+   * migration stays visually verifiable against the Task 15 baseline. They are
+   * NOT the intended final typography.
+   * - Playfair Display as the default display face is unjustified for a
+   *   regulated financial brief; DESIGN-BRIEF.md section 8.2 calls for a sans
+   *   display face instead.
+   * - Three families is one more than the pairings the design skill suggests.
+   * Blocked on: verifying Polish diacritic coverage per candidate face.
+   */
   --font-body: var(--font-dm-sans), system-ui, sans-serif;
   --font-display: var(--font-playfair), Georgia, serif;
   --font-label: var(--font-manrope), sans-serif;
@@ -431,7 +520,7 @@ Replace `app/globals.css` entirely:
 
 - [ ] **Step 2: Wire the fonts through `next/font`**
 
-Replace `app/layout.tsx`:
+Replace `src/app/layout.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -493,6 +582,41 @@ test("theme tokens resolve to the brief's values", async ({ page }) => {
   await expect(body).toHaveCSS("color", "rgb(29, 42, 57)"); // --color-ink
 });
 
+// Tailwind v4 resolves many utilities from dynamic scales. When a value is NOT
+// on a dynamic scale, Tailwind emits no rule at all: no build error, no failing
+// unit test, just silently missing styling. The plan leans on unusual values
+// (mt-17, gap-10.5, pt-25, py-26, p-9.5, opacity-36, z-80, z-100), so probe one
+// representative per family before writing 2000 lines that depend on them.
+test("unusual utility values actually emit CSS", async ({ page }) => {
+  await page.goto("/");
+  const probes = [
+    { cls: "mt-17", prop: "marginTop", expect: "68px" },
+    { cls: "gap-10.5", prop: "rowGap", expect: "42px" },
+    { cls: "py-26", prop: "paddingTop", expect: "104px" },
+    { cls: "p-9.5", prop: "paddingTop", expect: "38px" },
+    { cls: "opacity-36", prop: "opacity", expect: "0.36" },
+    { cls: "z-80", prop: "zIndex", expect: "80" },
+  ];
+
+  const results = await page.evaluate((list) => {
+    return list.map(({ cls, prop }) => {
+      const el = document.createElement("div");
+      el.className = cls;
+      el.style.position = "relative";
+      document.body.append(el);
+      const value = getComputedStyle(el)[prop as never] as string;
+      el.remove();
+      return { cls, value };
+    });
+  }, probes);
+
+  const failures = results
+    .filter((r, i) => r.value !== probes[i].expect)
+    .map((r, i) => `${r.cls}: got ${r.value}, expected ${probes[i].expect}`);
+
+  expect(failures, failures.join("; ")).toEqual([]);
+});
+
 test("focus-visible produces a visible outline", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => {
@@ -530,7 +654,9 @@ export default defineConfig({
 - [ ] **Step 4: Run the tests and verify Polish diacritics render**
 
 Run: `npm run test:e2e -- tokens.spec.ts`
-Expected: 2 passed.
+Expected: 3 passed.
+
+If `unusual utility values actually emit CSS` fails, the named value is not on a dynamic scale in this Tailwind version. Do not delete the assertion. Replace that family's usages throughout the plan's later tasks with bracket syntax (`opacity-[0.36]`, `z-[80]`, `mt-[68px]`) and record the substitution in your task report so later tasks use the same form. This is the one failure in this plan that is otherwise invisible.
 
 Then verify diacritics manually, which the brief flagged as unverified:
 
@@ -554,7 +680,7 @@ git commit -m "feat: add Tailwind v4 theme tokens and self-hosted fonts"
 This is where Global Constraint "zero em-dashes" becomes mechanically enforced instead of hoped for.
 
 **Files:**
-- Create: `lib/assertNoEmDash.ts`, `content/site.ts`, `content/nav.ts`, `content/contact.ts`, `content/services.ts`, `content/journey.ts`, `content/partners.ts`, `content/benefits.ts`
+- Create: `tests/helpers/dashGuard.ts`, `src/content/site.ts`, `src/content/nav.ts`, `src/content/contact.ts`, `src/content/services.ts`, `src/content/journey.ts`, `src/content/partners.ts`, `src/content/benefits.ts`
 - Test: `tests/unit/content.test.ts`
 
 **Interfaces:**
@@ -572,7 +698,8 @@ This is where Global Constraint "zero em-dashes" becomes mechanically enforced i
 
 - [ ] **Step 1: Write the dash guard**
 
-`lib/assertNoEmDash.ts`:
+`tests/helpers/dashGuard.ts`. It lives under `tests/` rather than `src/lib/` because nothing
+in the application ever imports it; only the content test does. User decision, 2026-07-26.
 
 ```ts
 /** Collects every string from an arbitrarily nested data structure. */
@@ -597,7 +724,7 @@ export function findDashViolations(strings: string[]): string[] {
 
 ```ts
 import { describe, expect, it } from "vitest";
-import { collectStrings, findDashViolations } from "@/lib/assertNoEmDash";
+import { collectStrings, findDashViolations } from "../helpers/dashGuard";
 import { navItems } from "@/content/nav";
 import { services } from "@/content/services";
 import { journeySteps } from "@/content/journey";
@@ -634,9 +761,9 @@ describe("content invariants", () => {
 
   it("preserves the public anchor targets", () => {
     const hrefs = navItems.map((i) => i.href);
-    expect(hrefs).toContain("#uslugi");
-    expect(hrefs).toContain("#partnerzy");
-    expect(hrefs).toContain("#kontakt");
+    expect(hrefs).toContain("#services");
+    expect(hrefs).toContain("#partners");
+    expect(hrefs).toContain("#contact");
   });
 
   it("carries 6 services, 5 journey steps, 4 benefits", () => {
@@ -663,7 +790,7 @@ Expected: FAIL, cannot resolve `@/content/nav` and siblings.
 
 - [ ] **Step 4: Write the content modules**
 
-`content/site.ts`:
+`src/content/site.ts`:
 
 ```ts
 export const site = {
@@ -677,19 +804,19 @@ export const site = {
 
 `baseUrl` is a deliberate placeholder; Task 13 Step 5 records it as blocked on the real domain.
 
-`content/nav.ts`:
+`src/content/nav.ts`:
 
 ```ts
 export const navItems = [
   { label: "Strona główna", href: "/" },
-  { label: "Poznaj Hannę", href: "/poznaj-hanne" },
-  { label: "Usługi", href: "/#uslugi" },
-  { label: "Partnerzy", href: "/#partnerzy" },
-  { label: "Bezpłatna konsultacja", href: "/#kontakt" },
+  { label: "Poznaj Hannę", href: "/about-me" },
+  { label: "Usługi", href: "/#services" },
+  { label: "Partnerzy", href: "/#partners" },
+  { label: "Bezpłatna konsultacja", href: "/#contact" },
 ] as const;
 ```
 
-`content/contact.ts`:
+`src/content/contact.ts`:
 
 ```ts
 /**
@@ -705,7 +832,7 @@ export const contact = {
 } as const;
 ```
 
-`content/services.ts`:
+`src/content/services.ts`:
 
 ```ts
 export type ServiceIconName =
@@ -761,13 +888,13 @@ export const services = [
 }>;
 ```
 
-`content/journey.ts`:
+`src/content/journey.ts`:
 
 ```ts
 export const journeySteps = [
   {
     n: 1,
-    kicker: "Pierwszy kontakt",
+    kicker: "Pierwszy contact",
     title: "Krótka rozmowa o tym, czego potrzebujesz",
     body: "Ustalamy temat, cel i to, czy potrzebna jest pełna analiza, czy prostsza ścieżka.",
     tags: ["bez zobowiązań", "online lub stacjonarnie"],
@@ -805,7 +932,7 @@ export const journeySteps = [
 
 Note on step 5's `body`: the legacy string was `"Możesz wrócić z pytaniami również później — przy zmianie sytuacji lub potrzeb."` The em-dash is replaced with a comma per Global Constraints. This is one of the 9 dash sites.
 
-`content/partners.ts`:
+`src/content/partners.ts`:
 
 ```ts
 export const insurancePartners = [
@@ -820,7 +947,7 @@ export const insurancePartners = [
   { name: "Vienna Life", file: "vienna-life.svg" },
   { name: "ERGO Hestia", file: "ergo-hestia.svg" },
   { name: "PZU", file: "pzu.svg" },
-  { name: "Leadenhall", file: "leadenhall.svg" },
+  { name: "Leadenhall", file: "leadenhall.png" },
   { name: "UNIQA", file: "uniqa.svg" },
 ] as const;
 
@@ -850,9 +977,9 @@ export const marqueePartners = [
 ] as const;
 ```
 
-The three raster extensions are deliberate; the earlier cleanup pass corrected these paths after they pointed at non-existent `.svg` files.
+The raster extensions are deliberate. User rule, 2026-07-28: **where a logo exists in both raster and vector form, the raster file wins**, because a raster copy means the vector was either never found or looked wrong. Four files are affected: `compensa.png`, `bnp-paribas.png`, `leadenhall.png` and `pko-bp.jpg`. `leadenhall.svg` was deleted in Task 6 for this reason, even though the legacy page referenced it.
 
-`content/benefits.ts`:
+`src/content/benefits.ts`:
 
 ```ts
 export const benefits = [
@@ -888,8 +1015,8 @@ git commit -m "feat: extract page content into typed modules with a dash guard"
 ### Task 4: Layout shell, skip link, header and footer
 
 **Files:**
-- Modify: `app/layout.tsx`
-- Create: `components/SkipLink.tsx`, `components/SiteHeader.tsx`, `components/SiteFooter.tsx`
+- Modify: `src/app/layout.tsx`
+- Create: `src/components/SkipLink.tsx`, `src/components/SiteHeader.tsx`, `src/components/SiteFooter.tsx`
 - Test: `tests/unit/site-header.test.tsx`
 
 **Interfaces:**
@@ -903,8 +1030,14 @@ git commit -m "feat: extract page content into typed modules with a dash guard"
 ```tsx
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import SiteHeader from "@/components/SiteHeader";
+
+// SiteHeader calls usePathname(). Outside an App Router context that hook has
+// no provider, so it must be mocked or every test in this file throws.
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+}));
 
 describe("SiteHeader", () => {
   it("renders all five nav labels", () => {
@@ -941,7 +1074,7 @@ Expected: FAIL, cannot resolve `@/components/SiteHeader`.
 
 - [ ] **Step 3: Write the three components**
 
-`components/SkipLink.tsx` (retire item 18):
+`src/components/SkipLink.tsx` (retire item 18):
 
 ```tsx
 export default function SkipLink() {
@@ -956,7 +1089,7 @@ export default function SkipLink() {
 }
 ```
 
-`components/SiteHeader.tsx`:
+`src/components/SiteHeader.tsx`:
 
 ```tsx
 "use client";
@@ -1002,7 +1135,7 @@ export default function SiteHeader() {
           className="absolute inset-x-5 top-[78px] hidden flex-col gap-3.5 rounded-xl border border-line bg-surface p-5 shadow-card data-[open=true]:flex lg:static lg:flex lg:flex-row lg:items-center lg:gap-6 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
         >
           {navItems.map((item) => {
-            const isCta = item.href === "/#kontakt";
+            const isCta = item.href === "/#contact";
             const isActive = item.href === pathname;
             return (
               <Link
@@ -1027,7 +1160,7 @@ export default function SiteHeader() {
 }
 ```
 
-`components/SiteFooter.tsx` (includes retire item 26, legal links):
+`src/components/SiteFooter.tsx` (includes retire item 26, legal links):
 
 ```tsx
 import Link from "next/link";
@@ -1056,10 +1189,10 @@ export default function SiteFooter() {
 
         <div className="flex flex-col gap-2.5">
           <strong>Serwis</strong>
-          <Link className="text-[13px] text-[#bed0dd]" href="/#jak-dzialam">Jak działam</Link>
-          <Link className="text-[13px] text-[#bed0dd]" href="/#uslugi">Usługi</Link>
-          <Link className="text-[13px] text-[#bed0dd]" href="/#partnerzy">Partnerzy</Link>
-          <Link className="text-[13px] text-[#bed0dd]" href="/polityka-prywatnosci">
+          <Link className="text-[13px] text-[#bed0dd]" href="/#how-it-works">Jak działam</Link>
+          <Link className="text-[13px] text-[#bed0dd]" href="/#services">Usługi</Link>
+          <Link className="text-[13px] text-[#bed0dd]" href="/#partners">Partnerzy</Link>
+          <Link className="text-[13px] text-[#bed0dd]" href="/privacy-policy">
             Polityka prywatności
           </Link>
         </div>
@@ -1092,7 +1225,7 @@ Expected: 2 passed.
 
 - [ ] **Step 5: Mount the shell in the root layout**
 
-In `app/layout.tsx`, replace the `<body>` children with:
+In `src/app/layout.tsx`, replace the `<body>` children with:
 
 ```tsx
       <body
@@ -1132,7 +1265,7 @@ git commit -m "feat: add layout shell with skip link, header and footer"
 Replaces the legacy `IntersectionObserver` plus `.reveal { opacity: 0 }` pattern. Fixes the brief's section 9 item "content is invisible without JS" and implements reduced motion as "degrade to static" rather than zeroed durations.
 
 **Files:**
-- Create: `components/Reveal.tsx`
+- Create: `src/components/Reveal.tsx`
 - Test: `tests/unit/reveal.test.tsx`
 
 **Interfaces:**
@@ -1180,7 +1313,7 @@ Expected: FAIL, cannot resolve `@/components/Reveal`.
 
 - [ ] **Step 3: Write the component**
 
-`components/Reveal.tsx`:
+`src/components/Reveal.tsx`:
 
 ```tsx
 "use client";
@@ -1247,8 +1380,8 @@ The marquee becomes a sibling of the hero rather than a child, which is retire i
 
 **Files:**
 - Move: `assets/logos/*` to `public/logos/*` (22 files)
-- Create: `app/_components/Hero.tsx`, `app/_components/PartnerMarquee.tsx`
-- Modify: `app/page.tsx`, `app/globals.css`
+- Create: `src/app/_components/Hero.tsx`, `src/app/_components/PartnerMarquee.tsx`
+- Modify: `src/app/page.tsx`, `src/app/globals.css`
 - Test: `tests/e2e/logos.spec.ts`
 
 **Interfaces:**
@@ -1257,9 +1390,14 @@ The marquee becomes a sibling of the hero rather than a child, which is retire i
 
 - [ ] **Step 1: Move the assets with history preserved**
 
+`assets/logos` holds 23 files, not 22: `leadenhall` exists as both `.png` and `.svg`. Per the
+raster-wins rule recorded under Task 3, the `.svg` goes and `src/content/partners.ts` points at
+`leadenhall.png`.
+
 ```bash
 mkdir -p public/logos
 git mv assets/logos/*.svg assets/logos/*.png assets/logos/*.jpg public/logos/
+git rm public/logos/leadenhall.svg
 rmdir assets/logos assets
 ls public/logos | wc -l
 ```
@@ -1268,7 +1406,7 @@ Expected output: `22`
 
 - [ ] **Step 2: Add the marquee keyframes to the theme**
 
-Append inside the existing `@theme` block in `app/globals.css`:
+Append inside the existing `@theme` block in `src/app/globals.css`:
 
 ```css
   --animate-marquee: marquee 26s linear infinite;
@@ -1286,7 +1424,7 @@ And append at the end of the file, outside any layer:
 
 - [ ] **Step 3: Write Hero**
 
-`app/_components/Hero.tsx`:
+`src/app/_components/Hero.tsx`:
 
 ```tsx
 import { contact } from "@/content/contact";
@@ -1317,13 +1455,13 @@ export default function Hero() {
 
           <div className="my-8.5 flex flex-wrap gap-3.5">
             <a
-              href="#kontakt"
+              href="#contact"
               className="inline-flex min-h-[54px] items-center justify-center rounded-pill bg-primary px-6 font-label font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-primary-strong active:translate-y-0"
             >
               Bezpłatna konsultacja
             </a>
             <a
-              href="#uslugi"
+              href="#services"
               className="inline-flex min-h-[54px] items-center justify-center rounded-pill border border-line bg-white/75 px-6 font-label font-extrabold text-ink transition hover:-translate-y-0.5 active:translate-y-0"
             >
               Zobacz zakres usług
@@ -1380,7 +1518,7 @@ Two Global Constraint edits applied here: the hero lead's em-dash became a comma
 
 - [ ] **Step 4: Write PartnerMarquee**
 
-`app/_components/PartnerMarquee.tsx`:
+`src/app/_components/PartnerMarquee.tsx`:
 
 ```tsx
 import { marqueePartners } from "@/content/partners";
@@ -1394,9 +1532,14 @@ export default function PartnerMarquee() {
         </span>
         <div className="overflow-hidden">
           <div className="flex w-max animate-marquee gap-10.5 motion-reduce:animate-none motion-reduce:flex-wrap motion-reduce:gap-y-5">
-            {marqueePartners.map((file) => (
+            {/*
+              The list is rendered twice so translateX(-50%) loops seamlessly.
+              The second copy exists only for the loop, so it is hidden when the
+              animation is off. One map over a doubled array, not two maps.
+            */}
+            {[...marqueePartners, ...marqueePartners].map((file, i) => (
               <img
-                key={file}
+                key={`${file}-${i}`}
                 src={`/logos/${file}`}
                 alt=""
                 aria-hidden="true"
@@ -1404,19 +1547,9 @@ export default function PartnerMarquee() {
                 height={60}
                 loading="lazy"
                 /* mix-blend-mode blends the white background of raster logos (JPEG/PNG) */
-                className="block h-6.5 w-auto mix-blend-multiply grayscale opacity-55"
-              />
-            ))}
-            {marqueePartners.map((file) => (
-              <img
-                key={`dup-${file}`}
-                src={`/logos/${file}`}
-                alt=""
-                aria-hidden="true"
-                width={160}
-                height={60}
-                loading="lazy"
-                className="block h-6.5 w-auto mix-blend-multiply grayscale opacity-55 motion-reduce:hidden"
+                className={`block h-6.5 w-auto mix-blend-multiply grayscale opacity-55${
+                  i >= marqueePartners.length ? " motion-reduce:hidden" : ""
+                }`}
               />
             ))}
           </div>
@@ -1431,7 +1564,7 @@ Every marquee logo is `aria-hidden` because the accessible list of partners is t
 
 - [ ] **Step 5: Compose the page**
 
-`app/page.tsx`:
+`src/app/page.tsx`:
 
 ```tsx
 import Hero from "@/app/_components/Hero";
@@ -1453,7 +1586,7 @@ export default function HomePage() {
 
 ```ts
 import { expect, test } from "@playwright/test";
-import { bankPartners, insurancePartners, marqueePartners } from "../../content/partners";
+import { bankPartners, insurancePartners, marqueePartners } from "../../src/content/partners";
 
 test("every logo file resolves with HTTP 200", async ({ request }) => {
   const files = new Set<string>([
@@ -1482,7 +1615,7 @@ test("the marquee lives outside the hero section", async ({ page }) => {
 - [ ] **Step 7: Run the tests**
 
 Run: `npm run test:e2e -- logos.spec.ts`
-Expected: 2 passed. A 404 means a filename in `content/partners.ts` disagrees with `public/logos/`.
+Expected: 2 passed. A 404 means a filename in `src/content/partners.ts` disagrees with `public/logos/`.
 
 - [ ] **Step 8: Commit**
 
@@ -1498,8 +1631,8 @@ git commit -m "feat: port hero, move logos to public, lift marquee out of the he
 The progress indicator moves from animated `height` to `transform: scaleY()`, which is retire item 25.
 
 **Files:**
-- Create: `app/_components/Journey.tsx`, `app/_components/JourneyTrack.tsx`
-- Modify: `app/page.tsx`
+- Create: `src/app/_components/Journey.tsx`, `src/app/_components/JourneyTrack.tsx`
+- Modify: `src/app/page.tsx`
 - Test: `tests/unit/journey-track.test.tsx`
 
 **Interfaces:**
@@ -1563,7 +1696,7 @@ Expected: FAIL, cannot resolve `@/app/_components/JourneyTrack`.
 
 This is the only part of the section that needs the browser. The step cards arrive as server-rendered `children`.
 
-`app/_components/JourneyTrack.tsx`:
+`src/app/_components/JourneyTrack.tsx`:
 
 ```tsx
 "use client";
@@ -1606,7 +1739,7 @@ export default function JourneyTrack({ children }: { children: React.ReactNode }
 
 No `"use client"` here. The five step cards, the sticky column and the benefits strip all stay on the server.
 
-`app/_components/Journey.tsx`:
+`src/app/_components/Journey.tsx`:
 
 ```tsx
 import JourneyTrack from "@/app/_components/JourneyTrack";
@@ -1616,7 +1749,7 @@ import Reveal from "@/components/Reveal";
 
 export default function Journey() {
   return (
-    <section id="jak-dzialam" className="bg-surface py-26">
+    <section id="how-it-works" className="bg-surface py-26">
       <div className="mx-auto grid w-[min(100%-40px,var(--container-site))] items-start gap-21 lg:grid-cols-[.82fr_1.18fr]">
         <Reveal className="lg:sticky lg:top-28">
           <p className="mb-3 font-label text-xs font-extrabold uppercase tracking-[0.15em] text-primary">
@@ -1639,7 +1772,7 @@ export default function Journey() {
           </figure>
 
           <a
-            href="#kontakt"
+            href="#contact"
             className="mt-7 inline-flex min-h-[54px] items-center justify-center rounded-pill bg-primary px-6 font-label font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-primary-strong active:translate-y-0"
           >
             Bezpłatna konsultacja
@@ -1703,7 +1836,7 @@ Expected: 2 passed.
 
 - [ ] **Step 6: Add Journey to the page**
 
-In `app/page.tsx`, add the import and render `<Journey />` after `<PartnerMarquee />`:
+In `src/app/page.tsx`, add the import and render `<Journey />` after `<PartnerMarquee />`:
 
 ```tsx
 import Hero from "@/app/_components/Hero";
@@ -1735,8 +1868,8 @@ git commit -m "feat: port journey timeline with a transform-driven progress leaf
 Retire item 10: the six emoji become icon-library glyphs.
 
 **Files:**
-- Create: `app/_components/Services.tsx`
-- Modify: `app/page.tsx`
+- Create: `src/app/_components/Services.tsx`
+- Modify: `src/app/page.tsx`
 - Test: `tests/unit/services.test.tsx`
 
 **Interfaces:**
@@ -1794,7 +1927,7 @@ Expected: FAIL, cannot resolve `@/app/_components/Services`.
 
 - [ ] **Step 3: Write the component**
 
-`app/_components/Services.tsx`:
+`src/app/_components/Services.tsx`:
 
 ```tsx
 import {
@@ -1820,7 +1953,7 @@ const icons: Record<ServiceIconName, Icon> = {
 
 export default function Services() {
   return (
-    <section id="uslugi" className="bg-surface-soft py-26">
+    <section id="services" className="bg-surface-soft py-26">
       <div className="mx-auto w-[min(100%-40px,var(--container-site))]">
         <Reveal>
           <div className="mb-13 max-w-[790px]">
@@ -1846,7 +1979,7 @@ export default function Services() {
                   <h3 className="mb-2.5 mt-6 font-display text-[22px]">{service.title}</h3>
                   <p className="max-w-[65ch] text-muted">{service.body}</p>
                   <a
-                    href="#kontakt"
+                    href="#contact"
                     className="mt-auto pt-6 font-label font-extrabold text-primary transition hover:text-primary-strong"
                   >
                     Bezpłatna konsultacja
@@ -1871,7 +2004,7 @@ Expected: 3 passed.
 
 - [ ] **Step 5: Add Services to the page**
 
-Add the import and render `<Services />` after `<Journey />` in `app/page.tsx`.
+Add the import and render `<Services />` after `<Journey />` in `src/app/page.tsx`.
 
 - [ ] **Step 6: Commit**
 
@@ -1885,8 +2018,8 @@ git commit -m "feat: port services section with Phosphor icons and one CTA label
 ### Task 9: Partners section
 
 **Files:**
-- Create: `app/_components/Partners.tsx`
-- Modify: `app/page.tsx`
+- Create: `src/app/_components/Partners.tsx`
+- Modify: `src/app/page.tsx`
 - Test: `tests/unit/partners.test.tsx`
 
 **Interfaces:**
@@ -1927,7 +2060,7 @@ Expected: FAIL, cannot resolve `@/app/_components/Partners`.
 
 - [ ] **Step 3: Write the component**
 
-`app/_components/Partners.tsx`:
+`src/app/_components/Partners.tsx`:
 
 ```tsx
 import { bankPartners, insurancePartners } from "@/content/partners";
@@ -1950,7 +2083,7 @@ const groups: Group[] = [
 
 export default function Partners() {
   return (
-    <section id="partnerzy" className="bg-surface py-26">
+    <section id="partners" className="bg-surface py-26">
       <div className="mx-auto w-[min(100%-40px,var(--container-site))]">
         <Reveal>
           <div className="mb-10 max-w-[790px]">
@@ -2002,7 +2135,7 @@ Expected: 2 passed.
 
 - [ ] **Step 5: Add Partners to the page**
 
-Add the import and render `<Partners />` after `<Services />` in `app/page.tsx`.
+Add the import and render `<Partners />` after `<Services />` in `src/app/page.tsx`.
 
 - [ ] **Step 6: Commit**
 
@@ -2018,8 +2151,8 @@ git commit -m "feat: port partners section with both logo grids"
 Retire item 1 forbids porting the div-based fake form. It becomes a labeled placeholder slot instead, which is honest and keeps the section renderable until the real embed code arrives.
 
 **Files:**
-- Create: `app/_components/Consultation.tsx`
-- Modify: `app/page.tsx`
+- Create: `src/app/_components/Consultation.tsx`
+- Modify: `src/app/page.tsx`
 - Test: `tests/unit/consultation.test.tsx`
 
 **Interfaces:**
@@ -2065,7 +2198,7 @@ Expected: FAIL, cannot resolve `@/app/_components/Consultation`.
 
 - [ ] **Step 3: Write the component**
 
-`app/_components/Consultation.tsx`:
+`src/app/_components/Consultation.tsx`:
 
 ```tsx
 import { contact } from "@/content/contact";
@@ -2073,7 +2206,7 @@ import Reveal from "@/components/Reveal";
 
 export default function Consultation() {
   return (
-    <section id="kontakt" className="bg-surface-soft py-26">
+    <section id="contact" className="bg-surface-soft py-26">
       <Reveal className="mx-auto w-[min(100%-40px,var(--container-site))]">
         <div className="grid overflow-hidden rounded-[34px] bg-surface shadow-card lg:grid-cols-[.82fr_1.18fr]">
           <div className="bg-[radial-gradient(circle_at_20%_20%,rgb(210_170_104/0.15),transparent_28%),var(--color-primary-dark)] p-12 text-white">
@@ -2120,7 +2253,7 @@ export default function Consultation() {
                 </p>
                 <p className="mx-auto mt-2 max-w-[46ch] text-[13px] text-muted">
                   Po otrzymaniu oficjalnego kodu widget zostanie osadzony w tym miejscu.
-                  Do tego czasu prosimy o kontakt telefoniczny lub e-mail.
+                  Do tego czasu prosimy o contact telefoniczny lub e-mail.
                 </p>
               </div>
             </div>
@@ -2141,7 +2274,7 @@ Expected: 3 passed.
 
 - [ ] **Step 5: Add Consultation to the page**
 
-Add the import and render `<Consultation />` after `<Partners />` in `app/page.tsx`.
+Add the import and render `<Consultation />` after `<Partners />` in `src/app/page.tsx`.
 
 - [ ] **Step 6: Commit**
 
@@ -2152,27 +2285,27 @@ git commit -m "feat: port consultation section with an honest Lendi slot"
 
 ---
 
-### Task 11: The `/poznaj-hanne` page
+### Task 11: The `/about-me` page
 
 **Requires the URL-change confirmation from Global Constraints before starting.**
 
 **Files:**
-- Create: `app/poznaj-hanne/page.tsx`, `app/poznaj-hanne/_components/AboutHero.tsx`, `app/poznaj-hanne/_components/AboutWorking.tsx`
-- Test: `tests/e2e/poznaj-hanne.spec.ts`
+- Create: `src/app/about-me/page.tsx`, `src/app/about-me/_components/AboutHero.tsx`, `src/app/about-me/_components/AboutWorking.tsx`
+- Test: `tests/e2e/about-me.spec.ts`
 
 **Interfaces:**
 - Consumes: `contact`, `site` (Task 3), `Reveal` (Task 5).
-- Produces: route `/poznaj-hanne`; `<AboutHero />` and `<AboutWorking />`, default exports, server components.
+- Produces: route `/about-me`; `<AboutHero />` and `<AboutWorking />`, default exports, server components.
 
 - [ ] **Step 1: Write the failing route test**
 
-`tests/e2e/poznaj-hanne.spec.ts`:
+`tests/e2e/about-me.spec.ts`:
 
 ```ts
 import { expect, test } from "@playwright/test";
 
 test("the advisor page renders its heading and philosophy", async ({ page }) => {
-  await page.goto("/poznaj-hanne");
+  await page.goto("/about-me");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "dobra decyzja finansowa",
   );
@@ -2180,25 +2313,25 @@ test("the advisor page renders its heading and philosophy", async ({ page }) => 
 });
 
 test("the advisor page has no dead links", async ({ page }) => {
-  await page.goto("/poznaj-hanne");
+  await page.goto("/about-me");
   const deadLinks = await page.locator('a[href="#"]').count();
   expect(deadLinks).toBe(0);
 });
 
 test("the four how-I-work blocks render", async ({ page }) => {
-  await page.goto("/poznaj-hanne");
+  await page.goto("/about-me");
   await expect(page.getByRole("article")).toHaveCount(4);
 });
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm run test:e2e -- poznaj-hanne.spec.ts`
-Expected: FAIL, 404 on `/poznaj-hanne`.
+Run: `npm run test:e2e -- about-me.spec.ts`
+Expected: FAIL, 404 on `/about-me`.
 
 - [ ] **Step 3: Write AboutHero**
 
-`app/poznaj-hanne/_components/AboutHero.tsx`:
+`src/app/about-me/_components/AboutHero.tsx`:
 
 ```tsx
 import { contact } from "@/content/contact";
@@ -2280,7 +2413,7 @@ The legacy Facebook tile pointed at `href="#"`. It is dropped rather than ported
 
 - [ ] **Step 4: Write AboutWorking**
 
-`app/poznaj-hanne/_components/AboutWorking.tsx`:
+`src/app/about-me/_components/AboutWorking.tsx`:
 
 ```tsx
 import Reveal from "@/components/Reveal";
@@ -2368,20 +2501,20 @@ export default function AboutWorking() {
 
 - [ ] **Step 5: Write the page**
 
-`app/poznaj-hanne/page.tsx`:
+`src/app/about-me/page.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
 import Link from "next/link";
-import AboutHero from "@/app/poznaj-hanne/_components/AboutHero";
-import AboutWorking from "@/app/poznaj-hanne/_components/AboutWorking";
+import AboutHero from "@/app/about-me/_components/AboutHero";
+import AboutWorking from "@/app/about-me/_components/AboutWorking";
 import Reveal from "@/components/Reveal";
 
 export const metadata: Metadata = {
   title: "Poznaj Hannę",
   description:
     "Poznaj Hannę Khudziakovą: sposób pracy, bezpośredni kontakt i podejście do konsultacji ubezpieczeniowych oraz finansowych.",
-  alternates: { canonical: "/poznaj-hanne" },
+  alternates: { canonical: "/about-me" },
 };
 
 export default function AboutPage() {
@@ -2417,7 +2550,7 @@ export default function AboutPage() {
               </p>
             </div>
             <Link
-              href="/#kontakt"
+              href="/#contact"
               className="inline-flex min-h-[54px] w-fit items-center justify-center whitespace-nowrap rounded-pill bg-primary px-6 font-label font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-primary-strong active:translate-y-0"
             >
               Bezpłatna konsultacja
@@ -2432,14 +2565,14 @@ export default function AboutPage() {
 
 - [ ] **Step 6: Run the tests to verify they pass**
 
-Run: `npm run test:e2e -- poznaj-hanne.spec.ts`
+Run: `npm run test:e2e -- about-me.spec.ts`
 Expected: 3 passed.
 
 - [ ] **Step 7: Commit**
 
 ```bash
 git add -A
-git commit -m "feat: port the poznaj-hanne page"
+git commit -m "feat: port the about-me page"
 ```
 
 ---
@@ -2449,12 +2582,12 @@ git commit -m "feat: port the poznaj-hanne page"
 Retire items 26 and 28.
 
 **Files:**
-- Create: `app/not-found.tsx`, `app/polityka-prywatnosci/page.tsx`
+- Create: `src/app/not-found.tsx`, `src/app/privacy-policy/page.tsx`
 - Test: `tests/e2e/routes.spec.ts`
 
 **Interfaces:**
 - Consumes: `navItems` (Task 3).
-- Produces: routes `/polityka-prywatnosci` and the 404 boundary.
+- Produces: routes `/privacy-policy` and the 404 boundary.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2471,7 +2604,7 @@ test("unknown routes return a branded 404 with a way back", async ({ page }) => 
 });
 
 test("the privacy policy route exists and is marked as a draft", async ({ page }) => {
-  await page.goto("/polityka-prywatnosci");
+  await page.goto("/privacy-policy");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "Polityka prywatności",
   );
@@ -2486,7 +2619,7 @@ Expected: FAIL on both.
 
 - [ ] **Step 3: Write the 404 page**
 
-`app/not-found.tsx`:
+`src/app/not-found.tsx`:
 
 ```tsx
 import Link from "next/link";
@@ -2513,7 +2646,7 @@ export default function NotFound() {
             Strona główna
           </Link>
           <Link
-            href="/#kontakt"
+            href="/#contact"
             className="inline-flex min-h-[54px] items-center justify-center rounded-pill border border-line bg-surface px-6 font-label font-extrabold text-ink transition hover:-translate-y-0.5 active:translate-y-0"
           >
             Bezpłatna konsultacja
@@ -2527,7 +2660,7 @@ export default function NotFound() {
 
 - [ ] **Step 4: Write the privacy-policy placeholder**
 
-`app/polityka-prywatnosci/page.tsx`:
+`src/app/privacy-policy/page.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -2535,7 +2668,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Polityka prywatności",
   robots: { index: false, follow: false },
-  alternates: { canonical: "/polityka-prywatnosci" },
+  alternates: { canonical: "/privacy-policy" },
 };
 
 export default function PrivacyPage() {
@@ -2589,8 +2722,8 @@ git commit -m "feat: add custom 404 and privacy-policy placeholder route"
 Closes the brief's section 7 SEO gaps.
 
 **Files:**
-- Modify: `app/layout.tsx`, `app/page.tsx`
-- Create: `app/icon.svg`, `app/sitemap.ts`, `app/robots.ts`
+- Modify: `src/app/layout.tsx`, `src/app/page.tsx`
+- Create: `src/app/icon.svg`, `src/app/sitemap.ts`, `src/app/robots.ts`
 - Test: `tests/e2e/metadata.spec.ts`
 
 **Interfaces:**
@@ -2627,7 +2760,7 @@ test("a favicon is served", async ({ request }) => {
 test("sitemap and robots are generated", async ({ request }) => {
   const sitemap = await request.get("/sitemap.xml");
   expect(sitemap.status()).toBe(200);
-  expect(await sitemap.text()).toContain("/poznaj-hanne");
+  expect(await sitemap.text()).toContain("/about-me");
 
   const robots = await request.get("/robots.txt");
   expect(robots.status()).toBe(200);
@@ -2642,7 +2775,7 @@ Expected: FAIL on canonical, OG, `/icon.svg`, `/sitemap.xml`.
 
 - [ ] **Step 3: Expand the root metadata**
 
-Replace the `metadata` export in `app/layout.tsx`:
+Replace the `metadata` export in `src/app/layout.tsx`:
 
 ```tsx
 export const metadata: Metadata = {
@@ -2666,7 +2799,7 @@ export const metadata: Metadata = {
 
 Add the import: `import { site } from "@/content/site";`
 
-Add a page-level override in `app/page.tsx`:
+Add a page-level override in `src/app/page.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -2678,7 +2811,7 @@ export const metadata: Metadata = {
 
 - [ ] **Step 4: Write the favicon**
 
-`app/icon.svg`:
+`src/app/icon.svg`:
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HK">
@@ -2691,7 +2824,7 @@ This is a monogram wordmark, which is the one case the brief's iconography rule 
 
 - [ ] **Step 5: Write sitemap and robots**
 
-`app/sitemap.ts`:
+`src/app/sitemap.ts`:
 
 ```ts
 import type { MetadataRoute } from "next";
@@ -2700,12 +2833,12 @@ import { site } from "@/content/site";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${site.baseUrl}/`, priority: 1 },
-    { url: `${site.baseUrl}/poznaj-hanne`, priority: 0.8 },
+    { url: `${site.baseUrl}/about-me`, priority: 0.8 },
   ];
 }
 ```
 
-`app/robots.ts`:
+`src/app/robots.ts`:
 
 ```ts
 import type { MetadataRoute } from "next";
@@ -2713,7 +2846,7 @@ import { site } from "@/content/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: "/polityka-prywatnosci" }],
+    rules: [{ userAgent: "*", allow: "/", disallow: "/privacy-policy" }],
     sitemap: `${site.baseUrl}/sitemap.xml`,
   };
 }
@@ -2731,7 +2864,7 @@ Expected: 3 passed.
 Append to the list in `DESIGN-BRIEF.md` section 8.3:
 
 ```markdown
-- Production domain. `content/site.ts` ships `https://example.invalid`; canonical URLs,
+- Production domain. `src/content/site.ts` ships `https://example.invalid`; canonical URLs,
   Open Graph URLs and `sitemap.xml` are all wrong until it is replaced.
 ```
 
@@ -2763,7 +2896,7 @@ Encodes the brief's 14-row regression guard plus its mechanical counts as execut
 ```ts
 import { expect, test } from "@playwright/test";
 
-const ROUTES = ["/", "/poznaj-hanne"] as const;
+const ROUTES = ["/", "/about-me"] as const;
 
 for (const route of ROUTES) {
   test(`${route}: zero em-dashes and en-dashes in visible text`, async ({ page }) => {
@@ -2871,7 +3004,7 @@ test("skip link is the first tab stop and targets main content", async ({ page }
 
 test("public anchor targets all exist on the home page", async ({ page }) => {
   await page.goto("/");
-  for (const id of ["top", "jak-dzialam", "uslugi", "partnerzy", "kontakt"]) {
+  for (const id of ["top", "how-it-works", "services", "partners", "contact"]) {
     await expect(page.locator(`#${id}`), `#${id}`).toHaveCount(1);
   }
 });
@@ -2891,7 +3024,7 @@ test("nav labels are unchanged", async ({ page }) => {
 });
 
 test("current page is marked in the nav", async ({ page }) => {
-  await page.goto("/poznaj-hanne");
+  await page.goto("/about-me");
   await expect(page.locator('header nav a[aria-current="page"]')).toHaveCount(1);
 });
 
@@ -2943,7 +3076,7 @@ test("content is visible with JavaScript disabled", async ({ browser }) => {
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText("Wybierz temat")).toBeVisible();
-  await expect(page.locator("#partnerzy")).toBeVisible();
+  await expect(page.locator("#partners")).toBeVisible();
 
   await context.close();
 });
@@ -2956,7 +3089,7 @@ The last test is the one that would have caught the legacy `.reveal { opacity: 0
 Run: `npm run test:e2e -- regression-guard.spec.ts`
 Expected: all pass. Two likely genuine failures and their meanings:
 - `no animation targets a non-GPU property` failing means a `transition-property` regressed to `all` or to a layout property somewhere.
-- `content is visible with JavaScript disabled` failing means a Motion `initial` state is hiding server-rendered content; the fix is in `components/Reveal.tsx`, not in the test.
+- `content is visible with JavaScript disabled` failing means a Motion `initial` state is hiding server-rendered content; the fix is in `src/components/Reveal.tsx`, not in the test.
 
 - [ ] **Step 3: Commit**
 
@@ -2979,21 +3112,15 @@ The migration's acceptance criterion. Only after parity is confirmed do the old 
 - Consumes: everything.
 - Produces: a repo whose only site implementation is the Next app.
 
-- [ ] **Step 1: Capture the legacy baseline**
+- [ ] **Step 1: Confirm the legacy baseline from Task 1 exists**
 
-The legacy site is still in the working tree at this point. Serve it on a second port and screenshot both pages:
+The baseline was captured in Task 1 Step 9, before Task 6 moved the logo assets. Do not try to re-capture it here: the legacy `index.html` points at `assets/logos/*`, which no longer exists, so a fresh capture would show 22 broken images.
 
 ```bash
-python3 -m http.server 8099 &
-sleep 2
-npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:8099/index.html /tmp/legacy-home.png
-npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:8099/poznaj-hanne.html /tmp/legacy-about.png
-npx playwright screenshot --full-page --viewport-size=390,844 \
-  http://127.0.0.1:8099/index.html /tmp/legacy-home-mobile.png
-kill %1
+ls -la /tmp/hanna-baseline/
 ```
+
+Expected: `legacy-home.png`, `legacy-about.png`, `legacy-home-mobile.png`. If any is missing, stop and report BLOCKED: the baseline cannot be reconstructed from the current working tree. Recovering it requires checking the legacy asset paths out of the Task 1 commit into a scratch directory, which is a decision for the controller, not this task.
 
 - [ ] **Step 2: Capture the migrated pages**
 
@@ -3001,11 +3128,11 @@ kill %1
 npm run build && npm run start &
 sleep 5
 npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:3000/ /tmp/next-home.png
+  http://127.0.0.1:3000/ /tmp/hanna-baseline/next-home.png
 npx playwright screenshot --full-page --viewport-size=1440,900 \
-  http://127.0.0.1:3000/poznaj-hanne /tmp/next-about.png
+  http://127.0.0.1:3000/about-me /tmp/hanna-baseline/next-about.png
 npx playwright screenshot --full-page --viewport-size=390,844 \
-  http://127.0.0.1:3000/ /tmp/next-home-mobile.png
+  http://127.0.0.1:3000/ /tmp/hanna-baseline/next-home-mobile.png
 kill %1
 ```
 
@@ -3017,7 +3144,7 @@ Open the three pairs side by side. Expected, intended deviations, all traceable 
 - service icons are Phosphor glyphs, not emoji (item 10)
 - all service-card CTAs read `Bezpłatna konsultacja` (item 4)
 - the consultation panel shows a dashed Lendi slot, not a fake form (item 1)
-- the Facebook tile is gone from `/poznaj-hanne` (dead link)
+- the Facebook tile is gone from `/about-me` (dead link)
 - journey steps are all at full opacity rather than dimmed until scrolled
 
 Any deviation **not** on that list is a porting bug. Fix it before continuing.
@@ -3030,7 +3157,7 @@ npm run test:e2e
 npm run build
 ```
 
-Expected: all unit tests pass, all e2e tests pass, build succeeds with `/`, `/poznaj-hanne`, `/polityka-prywatnosci` listed as static and `/sitemap.xml`, `/robots.txt` as generated routes.
+Expected: all unit tests pass, all e2e tests pass, build succeeds with `/`, `/about-me`, `/privacy-policy` listed as static and `/sitemap.xml`, `/robots.txt` as generated routes.
 
 - [ ] **Step 5: Delete the legacy implementation**
 
@@ -3066,8 +3193,8 @@ npm run dev
 
 Server Components by default. `"use client"` appears only on the smallest leaf that
 needs browser APIs, with server-rendered markup passed in as `children`. Shared
-components live in `components/`; route-specific ones sit in `app/<route>/_components/`.
-All page copy lives in `content/`, never inline in markup.
+components live in `src/components/`; route-specific ones sit in `src/app/<route>/_components/`.
+All page copy lives in `src/content/`, never inline in markup.
 
 ## Documentation
 
@@ -3090,6 +3217,42 @@ In `DESIGN-BRIEF.md` section 4, tick the boxes for items 2, 4, 7, 10, 11, 16, 17
 git add -A
 git commit -m "refactor: retire the vanilla implementation after verifying parity"
 ```
+
+---
+
+### Task 16: Cookie consent and the cookie section of the privacy policy
+
+Retire item 27. **Added 2026-08-25.** The item existed in the brief from the start but the
+original scoping section placed it in neither the in-scope nor the deferred list, so no task
+owned it. It is recorded here so it cannot be lost again.
+
+**Runs after Task 15, and is BLOCKED, deliberately.** Two blockers, both external:
+
+1. **The Lendi widget embed code (retire item 1).** This is the gating one. As the site stands
+   today it loads no third-party code at all: fonts are self-hosted via `next/font` (retire item
+   11), there is no analytics, and no cookie of any kind is set. With no non-essential cookie
+   there is nothing to ask consent for, and a banner that appears anyway is the exact dark
+   pattern the GDPR/RODO guidance warns against. The obligation begins the moment the widget
+   lands, because that is when third-party code starts running.
+2. **The legal texts** (`DESIGN-BRIEF.md` section 8.3). The cookie section of the privacy policy
+   is legal copy and must be written or approved by a human; section 11.F forbids generating or
+   silently changing it. Task 12 ships the policy route as an explicitly labeled placeholder for
+   this reason.
+
+**Scope when unblocked:**
+
+- A consent gate that blocks the Lendi widget from loading until consent is given, rather than a
+  banner that appears after the third-party code has already run. Consent must be as easy to
+  refuse as to accept, and revocable afterwards.
+- The stored decision, and how long it lasts.
+- The cookie section of `/privacy-policy`: what each cookie is, who sets it, how long it lives.
+  Human-authored.
+- Remove `robots: { index: false }` from the privacy route once it carries real content; Task 12
+  sets it precisely because an empty legal page should not be indexed.
+
+**Do not start this before the widget embed code exists.** Building a consent flow against a
+guess at what the widget sets would have to be rewritten once the real thing arrives, and a
+consent record that does not match the actual cookies is worse than none.
 
 ---
 
@@ -3126,6 +3289,15 @@ git commit -m "refactor: retire the vanilla implementation after verifying parit
 
 The `TODO:` comments in Tasks 6, 10, 11 and 12 are intentional in-code markers for blocked assets, each naming the brief section that owns it, not plan placeholders.
 
+**2b. Pre-flight scan** (run separately, before dispatching Task 1, per `subagent-driven-development`). Four more defects, all fixed:
+
+- **The visual parity check was impossible as written.** Task 6 moves `assets/logos/` to `public/logos/`; Task 15 then served the legacy `index.html`, which references `assets/logos/*`. The baseline would have shown 22 broken images and the migration's acceptance criterion would have quietly evaporated. Baseline capture moved to Task 1 Step 9, before any asset moves; Task 15 Step 1 now verifies rather than captures, and reports BLOCKED if the files are missing.
+- **Task 4's test would have failed on every run.** `SiteHeader` calls `usePathname()`, which has no provider outside an App Router context. Added `vi.mock("next/navigation", …)`.
+- **Tailwind v4 dynamic scales were assumed, not verified.** The plan uses `mt-17`, `gap-10.5`, `pt-25`, `py-26`, `p-9.5`, `opacity-36`, `z-80`, `z-100`. When a value is off-scale Tailwind emits nothing: no build error, no failing test, only wrong visuals. Added a probe test to Task 2 covering one representative per family, with instructions to substitute bracket syntax and propagate the substitution rather than delete the assertion.
+- **Task 6 mandated verbatim duplicated JSX** (`marqueePartners.map` twice) that a quality reviewer would correctly flag, putting the reviewer and the plan in conflict. Replaced with one map over a doubled array, using the index to hide the loop-only copy under reduced motion.
+
+**2c. A rename hazard discovered while applying the English-URL decision.** Replacing the Polish slugs with English ones corrupted five prose strings, because `kontakt`, `partnerzy` and `usługi` are ordinary Polish words as well as former slugs: `Skontaktuj się`, `Skontaktuję się z Tobą`, `jedna osoba do kontaktu`, `bezpośredni kontakt` and `Wybrani partnerzy` were all mangled before being restored. Global Constraints now carries this as an explicit warning, because the same trap is waiting for any later task that touches URLs.
+
 **3. Type consistency.** Checked across tasks: `ServiceIconName` is defined in Task 3 and consumed in Task 8's `icons` record. `marqueePartners` is `readonly string[]` in Task 3 and spread into a `Set<string>` in Task 6. `insurancePartners` and `bankPartners` share `{ name, file }`, matching Task 9's local `Group` type. `contact.phoneHref` is the single source used in Tasks 4, 10 and 11. `Reveal`'s props (`children`, `delay`, `className`) match every call site. `site.baseUrl` is defined in Task 3 and consumed in Task 13's `metadataBase`, `sitemap` and `robots`. The token name `ink` is used consistently instead of `text` in Tasks 2, 4, 6, 7, 8, 9, 12.
 
 ---
@@ -3140,4 +3312,4 @@ Plan complete. Two execution options:
 
 Two gates must clear before Task 1 starts:
 - **Next.js versus Vite + React** (see the assumption note at the top).
-- **The `/poznaj-hanne` URL change** (Global Constraints), needed before Task 11.
+- **The `/about-me` URL change** (Global Constraints), needed before Task 11.
