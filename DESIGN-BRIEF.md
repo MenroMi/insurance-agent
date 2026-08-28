@@ -341,6 +341,16 @@ Not design decisions, but they gate "done" in any stack:
   with the Lendi embed. Must not be forgotten before launch; it was missing from the plan's
   scoping split entirely until an audit on 2026-08-25.
 - Exact professional title.
+- Production domain. `src/content/site.ts` ships `https://example.invalid`; canonical URLs,
+  Open Graph URLs, `sitemap.xml` and `robots.txt` all carry it until it is replaced. Task 13
+  wired every one of them to `site.baseUrl`, so a single edit fixes all of them at once.
+- Structured data is written and tested but publishes NOTHING today, on purpose
+  (`src/lib/structuredData.ts`). It is gated on `contact.isPlaceholder` and on the domain
+  above, because a `ProfessionalService` record carrying `+48 000 000 000` and
+  `example.invalid` is a machine-readable claim about a real business that is false. Both
+  gates lift by themselves once the real phone, email and domain land in the content modules;
+  no further code change is needed. This closes the section 7 structured-data gap, which the
+  migration plan's Task 13 had no step for.
 
 ### 8.4 How scroll reveals are driven
 

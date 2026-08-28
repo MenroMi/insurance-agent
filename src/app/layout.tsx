@@ -1,8 +1,9 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Manrope, Playfair_Display } from 'next/font/google';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SkipLink } from '@/components/layout/SkipLink';
+import { site } from '@/content/site';
 import './globals.css';
 
 // The latin-ext subset is required for Polish diacritics
@@ -29,7 +30,45 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: 'Hanna Khudziakova',
+  metadataBase: new URL(site.baseUrl),
+  title: {
+    // The legacy <title> was "Hanna Khudziakova — Ubezpieczenia i finanse".
+    // The separator is a hyphen here: Global Constraints ban the em-dash.
+    default: `${site.name} - ${site.role}`,
+    template: `%s - ${site.name}`,
+  },
+  description: site.description,
+  /*
+   * No `alternates` here on purpose. Metadata set on the root layout is
+   * inherited by every page that does not override it, so a canonical of "/"
+   * declared at this level would make an unmatched URL announce itself as a
+   * duplicate of the home page. Each page declares its own.
+   */
+  /*
+   * No `title` or `description` here, against the plan's Step 3. Next falls
+   * back to each page's own title and description when openGraph omits them,
+   * so declaring them at the root does not add a default: it SHADOWS every
+   * page. Verified in the browser: with the plan's version, sharing /about-me
+   * produced og:title "Hanna Khudziakova - Ubezpieczenia i finanse" instead of
+   * "Poznaj Hannę". type, locale and siteName are genuinely site-wide.
+   */
+  openGraph: {
+    type: 'website',
+    locale: 'pl_PL',
+    siteName: site.name,
+  },
+  robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  /*
+   * Both legacy pages carried <meta name="theme-color">; the plan's Task 13
+   * drops it. Value taken from --color-page rather than from the legacy tag:
+   * legacy declared #f6f8fb while its own --page was #f7f9fc, so the tag never
+   * matched the background it was meant to tint. Porting that verbatim would
+   * carry a legacy inconsistency forward.
+   */
+  themeColor: '#f7f9fc',
 };
 
 export default function RootLayout({
