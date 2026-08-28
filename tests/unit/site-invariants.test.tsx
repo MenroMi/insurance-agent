@@ -24,13 +24,32 @@ import {
  * The dash and slug guards below apply to them exactly as to the ported pages.
  */
 const pages = [
-  { name: 'home', node: <HomePage />, labels: legacyLabels.home },
-  { name: 'about-me', node: <AboutPage />, labels: legacyLabels.about },
-  { name: '404', node: <NotFound />, labels: [] },
-  { name: 'privacy-policy', node: <PrivacyPage />, labels: [] },
+  {
+    name: 'home',
+    node: <HomePage />,
+    labels: legacyLabels.home,
+    quoteMarks: 1,
+  },
+  {
+    name: 'about-me',
+    node: <AboutPage />,
+    labels: legacyLabels.about,
+    quoteMarks: 1,
+  },
+  { name: '404', node: <NotFound />, labels: [], quoteMarks: 0 },
+  { name: 'privacy-policy', node: <PrivacyPage />, labels: [], quoteMarks: 0 },
 ] as const;
 
-describe.each(pages)('$name page', ({ node, labels }) => {
+describe.each(pages)('$name page', ({ node, labels, quoteMarks }) => {
+  it('keeps the decorative quote marks the legacy pages carry', () => {
+    // index.html line 167 (.cooperation-quote) and poznaj-hanne.html line 86
+    // (.about-quote-mark), both gold Playfair. The plan dropped BOTH silently,
+    // in Task 7 and Task 11, and each was only found by reading the legacy
+    // markup rather than by any test. Same class as the dropped eyebrows.
+    const text = renderedText(render(node).container);
+    expect((text.match(/\u201C/g) ?? []).length).toBe(quoteMarks);
+  });
+
   it('keeps every legacy eyebrow, kicker and micro-label', () => {
     const text = renderedText(render(node).container);
     expect(labels.filter((label) => !text.includes(label))).toEqual([]);

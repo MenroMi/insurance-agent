@@ -21,7 +21,20 @@ export const Journey = () => {
           </p>
 
           <figure className="mt-10 rounded-2xl border border-line bg-page p-6.5 shadow-card-soft">
-            <blockquote className="text-xl font-bold leading-relaxed">
+            {/*
+              index.html line 167, styles.css line 847. The plan dropped this
+              gold quote mark silently, the same way it dropped the one on the
+              about page; both are restored rather than treated as a decision,
+              because retire item 3 is out of scope. Decorative punctuation, so
+              it is hidden from assistive tech instead of being read aloud.
+            */}
+            <span
+              aria-hidden="true"
+              className="block h-9 font-display text-[54px] leading-[0.85] text-accent"
+            >
+              &ldquo;
+            </span>
+            <blockquote className="mt-2.5 text-xl font-bold leading-relaxed">
               Dobra decyzja finansowa zaczyna się od rozmowy, a nie od wyboru
               pierwszej oferty.
             </blockquote>
