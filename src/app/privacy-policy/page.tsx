@@ -8,7 +8,7 @@ export const metadata: Metadata = {
    * follow: false, which would also tell crawlers to ignore the header and
    * footer links rendered by the layout. noindex + follow is the conventional
    * pairing for a placeholder that is still part of the site.
-   * Task 16 removes the noindex once the real text lands.
+   * The noindex comes off once the real text lands; DESIGN-BRIEF.md section 8.5.
    */
   robots: { index: false, follow: true },
   alternates: { canonical: '/privacy-policy' },
@@ -26,7 +26,8 @@ export default function PrivacyPage() {
         human; DESIGN-BRIEF.md sections 8.3 and 11.F treat legal copy as never
         silently changed. Do not generate legal content.
 
-        The cookie section and the consent flow are Task 16, blocked on the
+        The cookie section and the consent flow are a separate feature, tracked
+        in DESIGN-BRIEF.md section 8.5 and blocked on the
         Lendi embed: the site sets no cookie and loads no third-party code
         today, so there is nothing yet to consent to.
       */}

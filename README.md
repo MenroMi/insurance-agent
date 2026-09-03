@@ -31,12 +31,12 @@ dev server starts serving a webpack runtime error. Stop dev, `rm -rf .next`, the
 All four are prerendered as static content, alongside `/sitemap.xml`, `/robots.txt` and
 `/icon.svg`.
 
-| Route | Notes |
-| --- | --- |
-| `/` | Hero, partner marquee, journey, services, partners, consultation |
-| `/about-me` | The advisor page |
-| `/privacy-policy` | Placeholder. `noindex` until it carries real text |
-| 404 | `src/app/not-found.tsx` |
+| Route             | Notes                                                            |
+| ----------------- | ---------------------------------------------------------------- |
+| `/`               | Hero, partner marquee, journey, services, partners, consultation |
+| `/about-me`       | The advisor page                                                 |
+| `/privacy-policy` | Placeholder. `noindex` until it carries real text                |
+| 404               | `src/app/not-found.tsx`                                          |
 
 ## Architecture
 
@@ -79,4 +79,5 @@ until after the migration; see `DESIGN-BRIEF.md` sections 4 and 8.
 Not shippable yet. The blockers are content and legal, not code, and are listed in
 `DESIGN-BRIEF.md` section 8.3: the real phone, email and domain (`src/content/site.ts`
 still carries `https://example.invalid`), the Lendi widget embed code, photography, the
-legal texts, and cookie consent, which is Task 16 of the migration plan.
+legal texts, and cookie consent, which is tracked as a separate feature in section 8.5 of
+that file rather than as migration work.

@@ -25,11 +25,11 @@ trust-first brief, and those constraints override aesthetic preference.
 
 ### Dials (section 1)
 
-| Dial | Existing site | Target | Rationale |
-|---|---|---|---|
-| `DESIGN_VARIANCE` | ~5 | **4** | trust-first row gives 3-4. Keep the asymmetric split hero, drop masonry and large empty zones. |
-| `MOTION_INTENSITY` | ~5 | **4** | Table gives 2-3, but this is a Persuade surface, not a public-sector service. 4 is the floor of "Fluid CSS": scroll reveals and hover, no scroll hijack. |
-| `VISUAL_DENSITY` | ~3-4 | **4** | trust-first row gives 4-5. Financial content needs corroborating density. |
+| Dial               | Existing site | Target | Rationale                                                                                                                                                |
+| ------------------ | ------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DESIGN_VARIANCE`  | ~5            | **4**  | trust-first row gives 3-4. Keep the asymmetric split hero, drop masonry and large empty zones.                                                           |
+| `MOTION_INTENSITY` | ~5            | **4**  | Table gives 2-3, but this is a Persuade surface, not a public-sector service. 4 is the floor of "Fluid CSS": scroll reveals and hover, no scroll hijack. |
+| `VISUAL_DENSITY`   | ~3-4          | **4**  | trust-first row gives 4-5. Financial content needs corroborating density.                                                                                |
 
 **Conflict resolved:** section 1.A prescribes `+2 / +2` for overhaul mode, which would give
 `7 / 7 / 4`. That collides with the trust-first row `3-4 / 2-3 / 4-5`. Per section 0.A.6 the
@@ -202,22 +202,22 @@ labels, no locale or weather strips.
 These already pass and are easy to break while rewriting into Tailwind. Section 11.C requires
 honoring existing wins.
 
-| Already correct | Evidence |
-|---|---|
+| Already correct            | Evidence                                                                                      |
+| -------------------------- | --------------------------------------------------------------------------------------------- |
 | Semantic HTML, no div-soup | 20 semantic elements on `index.html`: `header`, `nav`, `main`, `section`, `article`, `footer` |
-| Zero inline styles | no `style="` in either page |
-| Tinted shadows, not black | `rgba(24, 61, 96, .12)` carries the page hue |
-| Sane z-index scale | max value is 80, no `9999` spam |
-| Card CTAs bottom-aligned | `margin-top: auto` on `.service-card a` |
-| Current page marked in nav | `.active-link` on both pages |
-| Container constrained | `--container: 1180px` via `min()` |
-| No `100vh` bug | zero occurrences, so no iOS Safari viewport jump |
-| No pure `#000` | zero occurrences |
-| Alt text complete | all 22 logos labeled; decorative duplicates correctly `alt="" aria-hidden="true"` |
-| Copy is clean | no Lorem Ipsum, no Title Case headers, no "Elevate / Seamless" filler |
-| No dead commented-out code | zero commented rule blocks |
-| `lang="pl"` set | both pages |
-| Nav toggle exposes state | `aria-expanded` maintained in `script.js` |
+| Zero inline styles         | no `style="` in either page                                                                   |
+| Tinted shadows, not black  | `rgba(24, 61, 96, .12)` carries the page hue                                                  |
+| Sane z-index scale         | max value is 80, no `9999` spam                                                               |
+| Card CTAs bottom-aligned   | `margin-top: auto` on `.service-card a`                                                       |
+| Current page marked in nav | `.active-link` on both pages                                                                  |
+| Container constrained      | `--container: 1180px` via `min()`                                                             |
+| No `100vh` bug             | zero occurrences, so no iOS Safari viewport jump                                              |
+| No pure `#000`             | zero occurrences                                                                              |
+| Alt text complete          | all 22 logos labeled; decorative duplicates correctly `alt="" aria-hidden="true"`             |
+| Copy is clean              | no Lorem Ipsum, no Title Case headers, no "Elevate / Seamless" filler                         |
+| No dead commented-out code | zero commented rule blocks                                                                    |
+| `lang="pl"` set            | both pages                                                                                    |
+| Nav toggle exposes state   | `aria-expanded` maintained in `script.js`                                                     |
 
 ---
 
@@ -253,10 +253,10 @@ Metadata API covers most of it.
 > Task 15 baseline is a meaningful check. That means two pieces of known debt travel into the
 > React codebase intact, and both are tracked here rather than left to be noticed later:
 >
-> | Debt | Where it lives after migration | Owner |
-> |---|---|---|
-> | Playfair Display as the display face, and three font families instead of two | `src/app/globals.css` `@theme`, `src/app/layout.tsx` | section 8.2 below |
-> | All 12 legacy `border-radius` values kept as separate tokens | `src/app/globals.css` `@theme` | retire item 9 in section 4 |
+> | Debt                                                                         | Where it lives after migration                       | Owner                      |
+> | ---------------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------- |
+> | Playfair Display as the display face, and three font families instead of two | `src/app/globals.css` `@theme`, `src/app/layout.tsx` | section 8.2 below          |
+> | All 12 legacy `border-radius` values kept as separate tokens                 | `src/app/globals.css` `@theme`                       | retire item 9 in section 4 |
 >
 > Both carry a `DEFERRED DEBT` comment at the point of definition, so anyone reading the
 > stylesheet sees the status without reading this document. Neither is a bug to be reported in
@@ -335,11 +335,11 @@ Not design decisions, but they gate "done" in any stack:
 - Legal texts: privacy policy and RODO notice. Required once the Lendi widget starts collecting
   personal data. Also section 11.F treats legal copy as never-silently-changed, so it must be
   authored deliberately.
-- Cookie consent and the cookie section of the privacy policy (retire item 27). The migration
-  plan's Task 16 owns this. It is deliberately not built yet: the site currently sets no cookie
-  and loads no third-party code, so there is nothing to consent to, and the obligation starts
-  with the Lendi embed. Must not be forgotten before launch; it was missing from the plan's
-  scoping split entirely until an audit on 2026-08-25.
+- Cookie consent and the cookie section of the privacy policy (retire item 27). Tracked as a
+  **separate feature**, not as migration work: nothing in the legacy site did this, so there is
+  nothing to port. Briefly carried as the plan's Task 16, moved here by user decision on
+  2026-08-28. It was missing from the plan's scoping split entirely until an audit on
+  2026-08-25. Full scope in section 8.5 below. Must not be forgotten before launch.
 - Exact professional title.
 - Production domain. `src/content/site.ts` ships `https://example.invalid`; canonical URLs,
   Open Graph URLs, `sitemap.xml` and `robots.txt` all carry it until it is replaced. Task 13
@@ -379,6 +379,65 @@ touch the `children` / `delay` / `className` API:
 
 Decide during the design phase, when motion is being looked at as a whole. Nothing about this is
 urgent and nothing else depends on it.
+
+---
+
+### 8.5 Cookie consent, as a separate feature
+
+Retire item 27. Held out of the migration plan on purpose: it adds behaviour the legacy site
+never had, so there was nothing to port, and it is blocked on external work with its own
+release cycle.
+
+**Verified blocked, measured 2026-08-28 across all four routes plus interaction (opening the
+mobile nav, scrolling every section):** zero cookies, zero `Set-Cookie` response headers,
+empty `localStorage` and `sessionStorage`, and zero requests to any host other than the app's
+own. Fonts are self-hosted through `next/font` (retire item 11), and there is no analytics.
+
+Two blockers, both external:
+
+1. **The Lendi widget embed code** (retire item 1). This is the gating one. With no
+   non-essential cookie there is nothing to ask consent for, and a banner that appears anyway
+   is the exact dark pattern the RODO guidance warns against. The obligation begins the moment
+   the widget lands, because that is when third-party code starts running. It is also the only
+   thing that can tell us WHAT to declare: a consent record that does not match the actual
+   cookies is worse than none.
+2. **The legal text.** The cookie section of the privacy policy is legal copy and must be
+   written or approved by a human; section 11.F forbids generating or silently changing it.
+   `/privacy-policy` ships as an explicitly labeled placeholder for this reason.
+
+**Scope when unblocked:**
+
+- A consent **gate**, not a banner: consent must block the widget from loading, rather than
+  appear over third-party code that has already run. A banner shown after the fact is
+  legally useless.
+- Consent must be as easy to refuse as to accept, and revocable afterwards.
+- The stored decision and how long it lasts. `localStorage` is legitimate here: the consent
+  record itself is strictly necessary, so it needs no consent of its own.
+- The cookie section of `/privacy-policy`: what each cookie is, who sets it, how long it
+  lives. Human-authored.
+- Remove `robots: { index: false }` from the privacy route once it carries real content.
+
+**Library decision, researched 2026-08-28.** Recommendation: build it in house, roughly fifty
+lines, a client wrapper around the Lendi slot plus a revoke link in the footer. Reasons
+specific to this project: exactly one third-party vendor will ever appear, so the category
+management that libraries sell is weight with nothing to manage; the visual direction is
+locked and a vendor banner arrives with its own styling to override; and it adds no
+dependency surface, which matters here after the `sharp` advisory.
+
+Evaluated and rejected, with the registry data behind each:
+
+| Candidate                                      | Version | Licence    | Why not                                                                                                                                      |
+| ---------------------------------------------- | ------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `klaro`                                        | 0.7.21  | BSD-3      | declares `sass`, `webpack` and `@babel/eslint-parser` among its dependencies                                                                 |
+| `react-cookie-consent`                         | 10.0.2  | MIT        | banner UI only; it does not gate script loading, which is the actual requirement                                                             |
+| `js-cookie`                                    | 3.0.8   | MIT        | a `document.cookie` wrapper, no consent logic at all                                                                                         |
+| Hosted CMPs (Cookiebot, Usercentrics, iubenda) | n/a     | commercial | they load a third-party script themselves, to manage a third party. Also paid, and they need the domain that section 8.3 is still waiting on |
+
+`vanilla-cookieconsent` 3.1.0 (MIT, no dependencies, Polish locale, supports blocking) is the
+one candidate worth revisiting if the preference shifts to leaning on maintained compliance
+logic rather than owning it. Note its blocking works through `data-category` attributes on
+raw `<script>` tags, while the widget will be a React component, so some wiring is manual
+either way.
 
 ---
 

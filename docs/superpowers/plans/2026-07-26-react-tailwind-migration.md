@@ -26,11 +26,11 @@ Note that `@/*` maps to `./src/*`, so alias imports carry no `src` segment: the 
 
 Only three files in this plan carry `"use client"`:
 
-| Client leaf | Why it must be | What stays on the server |
-|---|---|---|
-| `src/components/SiteHeader.tsx` | `useState` for the mobile menu, `usePathname` for the active link | nothing; the header is small |
-| `src/components/Reveal.tsx` | `useInView` plus a post-hydration mount flag | **all of its `children`**, which is why the no-JavaScript test in Task 14 can pass |
-| `src/app/_components/JourneyTrack.tsx` | `useScroll` and `useSpring` for the progress bar | the five step cards, passed in as `children` |
+| Client leaf                            | Why it must be                                                    | What stays on the server                                                           |
+| -------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `src/components/SiteHeader.tsx`        | `useState` for the mobile menu, `usePathname` for the active link | nothing; the header is small                                                       |
+| `src/components/Reveal.tsx`            | `useInView` plus a post-hydration mount flag                      | **all of its `children`**, which is why the no-JavaScript test in Task 14 can pass |
+| `src/app/_components/JourneyTrack.tsx` | `useScroll` and `useSpring` for the progress bar                  | the five step cards, passed in as `children`                                       |
 
 A Client Component cannot import a Server Component, but it can receive server-rendered JSX through props. That single fact is what keeps the client bundle to a menu toggle, a viewport observer and a scroll spring.
 
@@ -47,7 +47,7 @@ Two consequences worth stating, because the obvious implementation gets both wro
 
 **Out of scope, deferred to the design phase:** items 1 (Lendi widget, blocked on real embed code), 3 (eyebrow reduction), 5 (3-column cards), 6 (hero recomposition), 8 (theme lock), 9 (radius scale consolidation), 12 (dark mode), 13 (real contacts, blocked), 14 and 15 (photography, blocked on assets), 19 (form states, blocked on item 1), 23 (card look), 24 (button pairing).
 
-**Its own phase, after the migration:** item 27 (cookie consent). Task 16 below. Added 2026-08-25, after an audit found item 27 assigned to neither bucket above; it was the only item in the list that no task or deferral covered.
+**Out of this plan entirely, tracked as a separate feature:** item 27 (cookie consent). Found on 2026-08-25 by an audit: it was the only item in the retire list that neither bucket above covered. It was briefly carried here as Task 16, then moved out by user decision on 2026-08-28, because it adds behaviour the legacy site never had rather than porting anything, and it is blocked on external work with its own release cycle. Its scope and blockers now live in `DESIGN-BRIEF.md` section 8.3.
 
 Item 9 is partially handled: the 12 radius values get encoded as `@theme` tokens so consolidating them later is a token edit, not a sweep.
 
@@ -61,15 +61,15 @@ Derived from `DESIGN-BRIEF.md`, with the URL rule overridden by explicit user de
 
 - **All URLs and anchor fragments are English; all user-visible copy stays Polish.** This overrides the brief's "keep anchor IDs stable" rule (section 11.C), approved explicitly because brief section 7 records no indexed SEO baseline to lose. The mapping, applied once and then fixed:
 
-  | Legacy | This project |
-  |---|---|
-  | `poznaj-hanne.html` | `/about-me` |
-  | (none) | `/privacy-policy` |
-  | `#jak-dzialam` | `#how-it-works` |
-  | `#uslugi` | `#services` |
-  | `#partnerzy` | `#partners` |
-  | `#kontakt` | `#contact` |
-  | `#top` | `#top` (already English) |
+  | Legacy              | This project             |
+  | ------------------- | ------------------------ |
+  | `poznaj-hanne.html` | `/about-me`              |
+  | (none)              | `/privacy-policy`        |
+  | `#jak-dzialam`      | `#how-it-works`          |
+  | `#uslugi`           | `#services`              |
+  | `#partnerzy`        | `#partners`              |
+  | `#kontakt`          | `#contact`               |
+  | `#top`              | `#top` (already English) |
 
 - **Primary nav labels unchanged, in Polish:** `Strona główna`, `Poznaj Hannę`, `Usługi`, `Partnerzy`, `Bezpłatna konsultacja`. Only their `href` values changed. A nav label and its URL are independent: `{ label: "Usługi", href: "/#services" }` is correct.
 - **Copy voice unchanged.** Visual modernisation is not a content rewrite. Port Polish strings character for character except where a task explicitly says otherwise. **Never let a URL rename touch prose:** `kontakt`, `partnerzy` and `usługi` are ordinary Polish words as well as former slugs. Strings like `Wybrani partnerzy`, `Skontaktuję się z Tobą`, `jedna osoba do kontaktu` and `bezpośredni kontakt` keep their Polish spelling.
@@ -162,10 +162,12 @@ Split rationale: content modules are separated from presentation because the bri
 Scaffolded by hand rather than `create-next-app`, because the directory is non-empty (the legacy site and git history stay in place until Task 15) and `create-next-app` aborts on conflicts.
 
 **Files:**
+
 - Create: `package.json`, `next.config.ts`, `tsconfig.json`, `postcss.config.mjs`, `vitest.config.ts`, `tests/setup.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `.gitignore` (modify)
 - Test: `tests/unit/smoke.test.tsx`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: a runnable Next app with `npm run dev`, `npm run build`, `npm test`, `npm run test:e2e`. Path alias `@/*` maps to repo root.
 
@@ -231,7 +233,7 @@ Replace the `scripts` block in `package.json` with:
 `next.config.ts`:
 
 ```ts
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -245,7 +247,7 @@ export default nextConfig;
 ```js
 export default {
   plugins: {
-    "@tailwindcss/postcss": {},
+    '@tailwindcss/postcss': {},
   },
 };
 ```
@@ -253,22 +255,22 @@ export default {
 `vitest.config.ts`:
 
 ```ts
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
-import path from "node:path";
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'node:path';
 
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: "jsdom",
-    setupFiles: ["./tests/setup.ts"],
-    include: ["tests/unit/**/*.test.{ts,tsx}"],
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.ts'],
+    include: ['tests/unit/**/*.test.{ts,tsx}'],
     globals: true,
   },
   resolve: {
     // Must match tsconfig's "@/*": ["./src/*"] or imports resolve in the
     // editor but fail in tests.
-    alias: { "@": path.resolve(__dirname, "./src") },
+    alias: { '@': path.resolve(__dirname, './src') },
   },
 });
 ```
@@ -276,7 +278,7 @@ export default defineConfig({
 `tests/setup.ts`:
 
 ```ts
-import "@testing-library/jest-dom/vitest";
+import '@testing-library/jest-dom/vitest';
 ```
 
 - [ ] **Step 4: Append Next.js entries to `.gitignore`**
@@ -300,20 +302,24 @@ next-env.d.ts
 `src/app/globals.css`:
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 ```
 
 `src/app/layout.tsx`:
 
 ```tsx
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "Hanna Khudziakova",
+  title: 'Hanna Khudziakova',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="pl">
       <body>{children}</body>
@@ -335,15 +341,15 @@ export default function HomePage() {
 `tests/unit/smoke.test.tsx`:
 
 ```tsx
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import HomePage from "@/app/page";
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import HomePage from '@/app/page';
 
-describe("scaffold", () => {
-  it("renders the home page heading", () => {
+describe('scaffold', () => {
+  it('renders the home page heading', () => {
     render(<HomePage />);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Hanna Khudziakova",
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Hanna Khudziakova'
     );
   });
 });
@@ -407,10 +413,12 @@ The baseline PNGs live in `/tmp` deliberately: they are throwaway verification a
 ### Task 2: Design tokens and fonts
 
 **Files:**
+
 - Modify: `src/app/globals.css`, `src/app/layout.tsx`
 - Create: `tests/e2e/tokens.spec.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1's `globals.css` and `layout.tsx`.
 - Produces: Tailwind utilities `bg-page`, `text-ink`, `text-muted`, `border-line`, `bg-primary`, `text-primary`, `bg-surface`, `bg-surface-soft`, `bg-surface-blue`, `text-accent`, `bg-accent-soft`, `text-success`, `rounded-md|lg|xl|pill`, `font-body`, `font-display`, `font-label`, `shadow-card`, `shadow-card-soft`. CSS variables `--font-dm-sans`, `--font-playfair`, `--font-manrope` on `<body>`.
 
@@ -421,7 +429,7 @@ Token values are copied from `DESIGN-BRIEF.md` section 3. The name `ink` is used
 Replace `src/app/globals.css` entirely:
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Colors: copied from DESIGN-BRIEF.md section 3 */
@@ -502,7 +510,9 @@ Replace `src/app/globals.css` entirely:
   }
 
   /* Retire item 20: no orphans in the long Polish headlines */
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     text-wrap: balance;
   }
 
@@ -523,38 +533,42 @@ Replace `src/app/globals.css` entirely:
 Replace `src/app/layout.tsx`:
 
 ```tsx
-import type { Metadata } from "next";
-import { DM_Sans, Manrope, Playfair_Display } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { DM_Sans, Manrope, Playfair_Display } from 'next/font/google';
+import './globals.css';
 
 // The latin-ext subset is required for Polish diacritics
 // (a c e l n o s z z). See DESIGN-BRIEF.md section 8.2.
 const dmSans = DM_Sans({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
-  display: "swap",
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-dm-sans',
+  display: 'swap',
 });
 
 const playfair = Playfair_Display({
-  subsets: ["latin", "latin-ext"],
-  weight: ["600", "700"],
-  variable: "--font-playfair",
-  display: "swap",
+  subsets: ['latin', 'latin-ext'],
+  weight: ['600', '700'],
+  variable: '--font-playfair',
+  display: 'swap',
 });
 
 const manrope = Manrope({
-  subsets: ["latin", "latin-ext"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-manrope",
-  display: "swap",
+  subsets: ['latin', 'latin-ext'],
+  weight: ['500', '600', '700', '800'],
+  variable: '--font-manrope',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "Hanna Khudziakova",
+  title: 'Hanna Khudziakova',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="pl">
       <body
@@ -572,14 +586,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 `tests/e2e/tokens.spec.ts`:
 
 ```ts
-import { expect, test } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
 test("theme tokens resolve to the brief's values", async ({ page }) => {
-  await page.goto("/");
-  const body = page.locator("body");
+  await page.goto('/');
+  const body = page.locator('body');
 
-  await expect(body).toHaveCSS("background-color", "rgb(247, 249, 252)"); // --color-page
-  await expect(body).toHaveCSS("color", "rgb(29, 42, 57)"); // --color-ink
+  await expect(body).toHaveCSS('background-color', 'rgb(247, 249, 252)'); // --color-page
+  await expect(body).toHaveCSS('color', 'rgb(29, 42, 57)'); // --color-ink
 });
 
 // Tailwind v4 resolves many utilities from dynamic scales. When a value is NOT
@@ -587,22 +601,22 @@ test("theme tokens resolve to the brief's values", async ({ page }) => {
 // unit test, just silently missing styling. The plan leans on unusual values
 // (mt-17, gap-10.5, pt-25, py-26, p-9.5, opacity-36, z-80, z-100), so probe one
 // representative per family before writing 2000 lines that depend on them.
-test("unusual utility values actually emit CSS", async ({ page }) => {
-  await page.goto("/");
+test('unusual utility values actually emit CSS', async ({ page }) => {
+  await page.goto('/');
   const probes = [
-    { cls: "mt-17", prop: "marginTop", expect: "68px" },
-    { cls: "gap-10.5", prop: "rowGap", expect: "42px" },
-    { cls: "py-26", prop: "paddingTop", expect: "104px" },
-    { cls: "p-9.5", prop: "paddingTop", expect: "38px" },
-    { cls: "opacity-36", prop: "opacity", expect: "0.36" },
-    { cls: "z-80", prop: "zIndex", expect: "80" },
+    { cls: 'mt-17', prop: 'marginTop', expect: '68px' },
+    { cls: 'gap-10.5', prop: 'rowGap', expect: '42px' },
+    { cls: 'py-26', prop: 'paddingTop', expect: '104px' },
+    { cls: 'p-9.5', prop: 'paddingTop', expect: '38px' },
+    { cls: 'opacity-36', prop: 'opacity', expect: '0.36' },
+    { cls: 'z-80', prop: 'zIndex', expect: '80' },
   ];
 
   const results = await page.evaluate((list) => {
     return list.map(({ cls, prop }) => {
-      const el = document.createElement("div");
+      const el = document.createElement('div');
       el.className = cls;
-      el.style.position = "relative";
+      el.style.position = 'relative';
       document.body.append(el);
       const value = getComputedStyle(el)[prop as never] as string;
       el.remove();
@@ -614,37 +628,37 @@ test("unusual utility values actually emit CSS", async ({ page }) => {
     .filter((r, i) => r.value !== probes[i].expect)
     .map((r, i) => `${r.cls}: got ${r.value}, expected ${probes[i].expect}`);
 
-  expect(failures, failures.join("; ")).toEqual([]);
+  expect(failures, failures.join('; ')).toEqual([]);
 });
 
-test("focus-visible produces a visible outline", async ({ page }) => {
-  await page.goto("/");
+test('focus-visible produces a visible outline', async ({ page }) => {
+  await page.goto('/');
   await page.evaluate(() => {
-    const a = document.createElement("a");
-    a.href = "#top";
-    a.id = "probe";
-    a.textContent = "probe";
+    const a = document.createElement('a');
+    a.href = '#top';
+    a.id = 'probe';
+    a.textContent = 'probe';
     document.body.append(a);
   });
-  await page.keyboard.press("Tab");
+  await page.keyboard.press('Tab');
   const outlineWidth = await page
-    .locator("#probe")
+    .locator('#probe')
     .evaluate((el) => getComputedStyle(el).outlineWidth);
-  expect(outlineWidth).toBe("2px");
+  expect(outlineWidth).toBe('2px');
 });
 ```
 
 Create `playwright.config.ts`:
 
 ```ts
-import { defineConfig } from "@playwright/test";
+import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: "./tests/e2e",
-  use: { baseURL: "http://127.0.0.1:3000" },
+  testDir: './tests/e2e',
+  use: { baseURL: 'http://127.0.0.1:3000' },
   webServer: {
-    command: "npm run dev",
-    url: "http://127.0.0.1:3000",
+    command: 'npm run dev',
+    url: 'http://127.0.0.1:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
@@ -680,10 +694,12 @@ git commit -m "feat: add Tailwind v4 theme tokens and self-hosted fonts"
 This is where Global Constraint "zero em-dashes" becomes mechanically enforced instead of hoped for.
 
 **Files:**
+
 - Create: `tests/helpers/dashGuard.ts`, `src/content/site.ts`, `src/content/nav.ts`, `src/content/contact.ts`, `src/content/services.ts`, `src/content/journey.ts`, `src/content/partners.ts`, `src/content/benefits.ts`
 - Test: `tests/unit/content.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces:
   - `collectStrings(value: unknown): string[]`
@@ -704,9 +720,9 @@ in the application ever imports it; only the content test does. User decision, 2
 ```ts
 /** Collects every string from an arbitrarily nested data structure. */
 export function collectStrings(value: unknown): string[] {
-  if (typeof value === "string") return [value];
+  if (typeof value === 'string') return [value];
   if (Array.isArray(value)) return value.flatMap(collectStrings);
-  if (value && typeof value === "object") {
+  if (value && typeof value === 'object') {
     return Object.values(value).flatMap(collectStrings);
   }
   return [];
@@ -714,7 +730,7 @@ export function collectStrings(value: unknown): string[] {
 
 /** Returns strings containing an em-dash or en-dash. See Global Constraints. */
 export function findDashViolations(strings: string[]): string[] {
-  return strings.filter((s) => s.includes("—") || s.includes("–"));
+  return strings.filter((s) => s.includes('—') || s.includes('–'));
 }
 ```
 
@@ -723,15 +739,15 @@ export function findDashViolations(strings: string[]): string[] {
 `tests/unit/content.test.ts`:
 
 ```ts
-import { describe, expect, it } from "vitest";
-import { collectStrings, findDashViolations } from "../helpers/dashGuard";
-import { navItems } from "@/content/nav";
-import { services } from "@/content/services";
-import { journeySteps } from "@/content/journey";
-import { bankPartners, insurancePartners } from "@/content/partners";
-import { benefits } from "@/content/benefits";
-import { contact } from "@/content/contact";
-import { site } from "@/content/site";
+import { describe, expect, it } from 'vitest';
+import { collectStrings, findDashViolations } from '../helpers/dashGuard';
+import { navItems } from '@/content/nav';
+import { services } from '@/content/services';
+import { journeySteps } from '@/content/journey';
+import { bankPartners, insurancePartners } from '@/content/partners';
+import { benefits } from '@/content/benefits';
+import { contact } from '@/content/contact';
+import { site } from '@/content/site';
 
 const everything = {
   site,
@@ -744,40 +760,40 @@ const everything = {
   benefits,
 };
 
-describe("content invariants", () => {
-  it("contains zero em-dashes and en-dashes", () => {
+describe('content invariants', () => {
+  it('contains zero em-dashes and en-dashes', () => {
     expect(findDashViolations(collectStrings(everything))).toEqual([]);
   });
 
-  it("preserves the five nav labels verbatim", () => {
+  it('preserves the five nav labels verbatim', () => {
     expect(navItems.map((i) => i.label)).toEqual([
-      "Strona główna",
-      "Poznaj Hannę",
-      "Usługi",
-      "Partnerzy",
-      "Bezpłatna konsultacja",
+      'Strona główna',
+      'Poznaj Hannę',
+      'Usługi',
+      'Partnerzy',
+      'Bezpłatna konsultacja',
     ]);
   });
 
-  it("preserves the public anchor targets", () => {
+  it('preserves the public anchor targets', () => {
     const hrefs = navItems.map((i) => i.href);
-    expect(hrefs).toContain("#services");
-    expect(hrefs).toContain("#partners");
-    expect(hrefs).toContain("#contact");
+    expect(hrefs).toContain('#services');
+    expect(hrefs).toContain('#partners');
+    expect(hrefs).toContain('#contact');
   });
 
-  it("carries 6 services, 5 journey steps, 4 benefits", () => {
+  it('carries 6 services, 5 journey steps, 4 benefits', () => {
     expect(services).toHaveLength(6);
     expect(journeySteps).toHaveLength(5);
     expect(benefits).toHaveLength(4);
   });
 
-  it("carries 13 insurance brands and 9 banks", () => {
+  it('carries 13 insurance brands and 9 banks', () => {
     expect(insurancePartners).toHaveLength(13);
     expect(bankPartners).toHaveLength(9);
   });
 
-  it("marks the contact details as placeholders", () => {
+  it('marks the contact details as placeholders', () => {
     expect(contact.isPlaceholder).toBe(true);
   });
 });
@@ -794,11 +810,11 @@ Expected: FAIL, cannot resolve `@/content/nav` and siblings.
 
 ```ts
 export const site = {
-  name: "Hanna Khudziakova",
-  role: "Ubezpieczenia i finanse",
+  name: 'Hanna Khudziakova',
+  role: 'Ubezpieczenia i finanse',
   description:
-    "Hanna Khudziakova, konsultacje w zakresie ubezpieczeń i finansowania. Współpraca z 17 firmami ubezpieczeniowymi oraz 9 bankami.",
-  baseUrl: "https://example.invalid",
+    'Hanna Khudziakova, konsultacje w zakresie ubezpieczeń i finansowania. Współpraca z 17 firmami ubezpieczeniowymi oraz 9 bankami.',
+  baseUrl: 'https://example.invalid',
 } as const;
 ```
 
@@ -808,11 +824,11 @@ export const site = {
 
 ```ts
 export const navItems = [
-  { label: "Strona główna", href: "/" },
-  { label: "Poznaj Hannę", href: "/about-me" },
-  { label: "Usługi", href: "/#services" },
-  { label: "Partnerzy", href: "/#partners" },
-  { label: "Bezpłatna konsultacja", href: "/#contact" },
+  { label: 'Strona główna', href: '/' },
+  { label: 'Poznaj Hannę', href: '/about-me' },
+  { label: 'Usługi', href: '/#services' },
+  { label: 'Partnerzy', href: '/#partners' },
+  { label: 'Bezpłatna konsultacja', href: '/#contact' },
 ] as const;
 ```
 
@@ -824,10 +840,10 @@ export const navItems = [
  * same placeholders in 6 places (DESIGN-BRIEF.md retire item 13).
  */
 export const contact = {
-  phone: "+48 000 000 000",
-  phoneHref: "tel:+48000000000",
-  email: "kontakt@twojadomena.pl",
-  location: "Zielona Góra",
+  phone: '+48 000 000 000',
+  phoneHref: 'tel:+48000000000',
+  email: 'kontakt@twojadomena.pl',
+  location: 'Zielona Góra',
   isPlaceholder: true,
 } as const;
 ```
@@ -836,49 +852,49 @@ export const contact = {
 
 ```ts
 export type ServiceIconName =
-  | "heart"
-  | "car"
-  | "house"
-  | "airplane"
-  | "building"
-  | "bank";
+  | 'heart'
+  | 'car'
+  | 'house'
+  | 'airplane'
+  | 'building'
+  | 'bank';
 
 export const services = [
   {
-    id: "zycie",
-    icon: "heart",
-    title: "Ubezpieczenia na życie",
-    body: "Ochrona rodziny, dochodu, kredytu oraz zabezpieczenie na wypadek poważnych zdarzeń.",
+    id: 'zycie',
+    icon: 'heart',
+    title: 'Ubezpieczenia na życie',
+    body: 'Ochrona rodziny, dochodu, kredytu oraz zabezpieczenie na wypadek poważnych zdarzeń.',
   },
   {
-    id: "samochod",
-    icon: "car",
-    title: "Samochód",
-    body: "OC, AC, assistance i NNW z porównaniem zakresu oraz warunków.",
+    id: 'samochod',
+    icon: 'car',
+    title: 'Samochód',
+    body: 'OC, AC, assistance i NNW z porównaniem zakresu oraz warunków.',
   },
   {
-    id: "dom",
-    icon: "house",
-    title: "Dom i mieszkanie",
-    body: "Ochrona nieruchomości, wyposażenia oraz odpowiedzialności cywilnej.",
+    id: 'dom',
+    icon: 'house',
+    title: 'Dom i mieszkanie',
+    body: 'Ochrona nieruchomości, wyposażenia oraz odpowiedzialności cywilnej.',
   },
   {
-    id: "podroze",
-    icon: "airplane",
-    title: "Podróże",
-    body: "Zakres dopasowany do kierunku, długości wyjazdu i planowanych aktywności.",
+    id: 'podroze',
+    icon: 'airplane',
+    title: 'Podróże',
+    body: 'Zakres dopasowany do kierunku, długości wyjazdu i planowanych aktywności.',
   },
   {
-    id: "firma",
-    icon: "building",
-    title: "Firma",
-    body: "OC działalności, majątek, pracownicy i ochrona właściciela firmy.",
+    id: 'firma',
+    icon: 'building',
+    title: 'Firma',
+    body: 'OC działalności, majątek, pracownicy i ochrona właściciela firmy.',
   },
   {
-    id: "kredyty",
-    icon: "bank",
-    title: "Kredyty i finansowanie",
-    body: "Możliwości dostępne w ramach współpracy z dziewięcioma bankami oraz Lendi.",
+    id: 'kredyty',
+    icon: 'bank',
+    title: 'Kredyty i finansowanie',
+    body: 'Możliwości dostępne w ramach współpracy z dziewięcioma bankami oraz Lendi.',
   },
 ] as const satisfies ReadonlyArray<{
   id: string;
@@ -894,38 +910,38 @@ export const services = [
 export const journeySteps = [
   {
     n: 1,
-    kicker: "Pierwszy contact",
-    title: "Krótka rozmowa o tym, czego potrzebujesz",
-    body: "Ustalamy temat, cel i to, czy potrzebna jest pełna analiza, czy prostsza ścieżka.",
-    tags: ["bez zobowiązań", "online lub stacjonarnie"],
+    kicker: 'Pierwszy contact',
+    title: 'Krótka rozmowa o tym, czego potrzebujesz',
+    body: 'Ustalamy temat, cel i to, czy potrzebna jest pełna analiza, czy prostsza ścieżka.',
+    tags: ['bez zobowiązań', 'online lub stacjonarnie'],
   },
   {
     n: 2,
-    kicker: "Analiza potrzeb",
-    title: "Porządkujemy Twoją sytuację",
-    body: "Sprawdzamy zobowiązania, aktualne rozwiązania, priorytety i najważniejsze ryzyka.",
-    tags: ["bez sztucznych scoringów", "konkretne pytania"],
+    kicker: 'Analiza potrzeb',
+    title: 'Porządkujemy Twoją sytuację',
+    body: 'Sprawdzamy zobowiązania, aktualne rozwiązania, priorytety i najważniejsze ryzyka.',
+    tags: ['bez sztucznych scoringów', 'konkretne pytania'],
   },
   {
     n: 3,
-    kicker: "Porównanie rozwiązań",
-    title: "Otrzymujesz dostępne warianty i jasne różnice",
-    body: "Zakres, koszty, warunki i ograniczenia przedstawione w prosty sposób.",
-    tags: ["17 firm ubezpieczeniowych", "9 banków"],
+    kicker: 'Porównanie rozwiązań',
+    title: 'Otrzymujesz dostępne warianty i jasne różnice',
+    body: 'Zakres, koszty, warunki i ograniczenia przedstawione w prosty sposób.',
+    tags: ['17 firm ubezpieczeniowych', '9 banków'],
   },
   {
     n: 4,
-    kicker: "Wspólna decyzja",
-    title: "Wybierasz rozwiązanie dopasowane do siebie",
-    body: "Decyzja należy do Ciebie. Pomagam zrozumieć konsekwencje każdego wariantu.",
-    tags: ["bez presji", "czas na decyzję"],
+    kicker: 'Wspólna decyzja',
+    title: 'Wybierasz rozwiązanie dopasowane do siebie',
+    body: 'Decyzja należy do Ciebie. Pomagam zrozumieć konsekwencje każdego wariantu.',
+    tags: ['bez presji', 'czas na decyzję'],
   },
   {
     n: 5,
-    kicker: "Opieka po zakupie",
-    title: "Kontakt nie kończy się po zawarciu umowy",
-    body: "Możesz wrócić z pytaniami również później, przy zmianie sytuacji lub potrzeb.",
-    tags: ["jedna osoba do kontaktu", "ciągłość obsługi"],
+    kicker: 'Opieka po zakupie',
+    title: 'Kontakt nie kończy się po zawarciu umowy',
+    body: 'Możesz wrócić z pytaniami również później, przy zmianie sytuacji lub potrzeb.',
+    tags: ['jedna osoba do kontaktu', 'ciągłość obsługi'],
   },
 ] as const;
 ```
@@ -936,44 +952,44 @@ Note on step 5's `body`: the legacy string was `"Możesz wrócić z pytaniami r�
 
 ```ts
 export const insurancePartners = [
-  { name: "Prudential", file: "prudential.svg" },
-  { name: "Compensa", file: "compensa.png" },
-  { name: "Wiener", file: "wiener.svg" },
-  { name: "Allianz", file: "allianz.svg" },
-  { name: "Generali", file: "generali.svg" },
-  { name: "Nationale-Nederlanden", file: "nationale-nederlanden.svg" },
-  { name: "SIGNAL IDUNA", file: "signal-iduna.svg" },
-  { name: "Warta", file: "warta.svg" },
-  { name: "Vienna Life", file: "vienna-life.svg" },
-  { name: "ERGO Hestia", file: "ergo-hestia.svg" },
-  { name: "PZU", file: "pzu.svg" },
-  { name: "Leadenhall", file: "leadenhall.png" },
-  { name: "UNIQA", file: "uniqa.svg" },
+  { name: 'Prudential', file: 'prudential.svg' },
+  { name: 'Compensa', file: 'compensa.png' },
+  { name: 'Wiener', file: 'wiener.svg' },
+  { name: 'Allianz', file: 'allianz.svg' },
+  { name: 'Generali', file: 'generali.svg' },
+  { name: 'Nationale-Nederlanden', file: 'nationale-nederlanden.svg' },
+  { name: 'SIGNAL IDUNA', file: 'signal-iduna.svg' },
+  { name: 'Warta', file: 'warta.svg' },
+  { name: 'Vienna Life', file: 'vienna-life.svg' },
+  { name: 'ERGO Hestia', file: 'ergo-hestia.svg' },
+  { name: 'PZU', file: 'pzu.svg' },
+  { name: 'Leadenhall', file: 'leadenhall.png' },
+  { name: 'UNIQA', file: 'uniqa.svg' },
 ] as const;
 
 export const bankPartners = [
-  { name: "Alior Bank", file: "alior-bank.svg" },
-  { name: "Bank Millennium", file: "bank-millennium.svg" },
-  { name: "Bank Pekao", file: "bank-pekao.svg" },
-  { name: "BNP Paribas", file: "bnp-paribas.png" },
-  { name: "BOŚ Bank", file: "bos-bank.svg" },
-  { name: "Erste Bank", file: "erste-bank.svg" },
-  { name: "ING", file: "ing.svg" },
-  { name: "mBank", file: "mbank.svg" },
-  { name: "PKO BP", file: "pko-bp.jpg" },
+  { name: 'Alior Bank', file: 'alior-bank.svg' },
+  { name: 'Bank Millennium', file: 'bank-millennium.svg' },
+  { name: 'Bank Pekao', file: 'bank-pekao.svg' },
+  { name: 'BNP Paribas', file: 'bnp-paribas.png' },
+  { name: 'BOŚ Bank', file: 'bos-bank.svg' },
+  { name: 'Erste Bank', file: 'erste-bank.svg' },
+  { name: 'ING', file: 'ing.svg' },
+  { name: 'mBank', file: 'mbank.svg' },
+  { name: 'PKO BP', file: 'pko-bp.jpg' },
 ] as const;
 
 /** The subset shown in the scrolling strip below the hero. */
 export const marqueePartners = [
-  "allianz.svg",
-  "generali.svg",
-  "warta.svg",
-  "pzu.svg",
-  "uniqa.svg",
-  "ergo-hestia.svg",
-  "ing.svg",
-  "mbank.svg",
-  "pko-bp.jpg",
+  'allianz.svg',
+  'generali.svg',
+  'warta.svg',
+  'pzu.svg',
+  'uniqa.svg',
+  'ergo-hestia.svg',
+  'ing.svg',
+  'mbank.svg',
+  'pko-bp.jpg',
 ] as const;
 ```
 
@@ -984,17 +1000,25 @@ The raster extensions are deliberate. User rule, 2026-07-28: **where a logo exis
 ```ts
 export const benefits = [
   {
-    figure: "17",
-    label: "firm ubezpieczeniowych",
-    body: "Większy zakres dostępnych możliwości.",
+    figure: '17',
+    label: 'firm ubezpieczeniowych',
+    body: 'Większy zakres dostępnych możliwości.',
   },
-  { figure: "9", label: "banków", body: "Finansowanie w jednym procesie doradczym." },
   {
-    figure: "1",
-    label: "stały doradca",
-    body: "Jedna osoba prowadzi Cię przez cały proces.",
+    figure: '9',
+    label: 'banków',
+    body: 'Finansowanie w jednym procesie doradczym.',
   },
-  { figure: "0 zł", label: "pierwsza konsultacja", body: "Rozmowa bez zobowiązań." },
+  {
+    figure: '1',
+    label: 'stały doradca',
+    body: 'Jedna osoba prowadzi Cię przez cały proces.',
+  },
+  {
+    figure: '0 zł',
+    label: 'pierwsza konsultacja',
+    body: 'Rozmowa bez zobowiązań.',
+  },
 ] as const;
 ```
 
@@ -1015,11 +1039,13 @@ git commit -m "feat: extract page content into typed modules with a dash guard"
 ### Task 4: Layout shell, skip link, header and footer
 
 **Files:**
+
 - Modify: `src/app/layout.tsx`
 - Create: `src/components/SkipLink.tsx`, `src/components/SiteHeader.tsx`, `src/components/SiteFooter.tsx`
 - Test: `tests/unit/site-header.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `navItems` (Task 3), `contact` (Task 3), `site` (Task 3), theme tokens (Task 2).
 - Produces: `<SkipLink />`, `<SiteHeader />`, `<SiteFooter />`, all default exports. `SiteHeader` is a client component; the other two are server components.
 
@@ -1028,41 +1054,41 @@ git commit -m "feat: extract page content into typed modules with a dash guard"
 `tests/unit/site-header.test.tsx`:
 
 ```tsx
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
-import SiteHeader from "@/components/SiteHeader";
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+import SiteHeader from '@/components/SiteHeader';
 
 // SiteHeader calls usePathname(). Outside an App Router context that hook has
 // no provider, so it must be mocked or every test in this file throws.
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
 }));
 
-describe("SiteHeader", () => {
-  it("renders all five nav labels", () => {
+describe('SiteHeader', () => {
+  it('renders all five nav labels', () => {
     render(<SiteHeader />);
     for (const label of [
-      "Strona główna",
-      "Poznaj Hannę",
-      "Usługi",
-      "Partnerzy",
-      "Bezpłatna konsultacja",
+      'Strona główna',
+      'Poznaj Hannę',
+      'Usługi',
+      'Partnerzy',
+      'Bezpłatna konsultacja',
     ]) {
-      expect(screen.getByRole("link", { name: label })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: label })).toBeInTheDocument();
     }
   });
 
-  it("toggles aria-expanded on the menu button", async () => {
+  it('toggles aria-expanded on the menu button', async () => {
     const user = userEvent.setup();
     render(<SiteHeader />);
-    const button = screen.getByRole("button", { name: /menu/i });
+    const button = screen.getByRole('button', { name: /menu/i });
 
-    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(button).toHaveAttribute('aria-expanded', 'false');
     await user.click(button);
-    expect(button).toHaveAttribute("aria-expanded", "true");
+    expect(button).toHaveAttribute('aria-expanded', 'true');
     await user.click(button);
-    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(button).toHaveAttribute('aria-expanded', 'false');
   });
 });
 ```
@@ -1092,13 +1118,13 @@ export default function SkipLink() {
 `src/components/SiteHeader.tsx`:
 
 ```tsx
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { navItems } from "@/content/nav";
-import { site } from "@/content/site";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { navItems } from '@/content/nav';
+import { site } from '@/content/site';
 
 export default function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -1107,7 +1133,11 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-80 border-b border-line/85 bg-page/85 backdrop-blur-lg">
       <div className="mx-auto flex min-h-[78px] w-[min(100%-40px,var(--container-site))] items-center justify-between">
-        <Link href="/" aria-label="Strona główna" className="inline-flex items-center gap-3">
+        <Link
+          href="/"
+          aria-label="Strona główna"
+          className="inline-flex items-center gap-3"
+        >
           <span className="grid size-[42px] place-items-center rounded-full bg-primary font-label font-extrabold text-white">
             HK
           </span>
@@ -1135,18 +1165,18 @@ export default function SiteHeader() {
           className="absolute inset-x-5 top-[78px] hidden flex-col gap-3.5 rounded-xl border border-line bg-surface p-5 shadow-card data-[open=true]:flex lg:static lg:flex lg:flex-row lg:items-center lg:gap-6 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
         >
           {navItems.map((item) => {
-            const isCta = item.href === "/#contact";
+            const isCta = item.href === '/#contact';
             const isActive = item.href === pathname;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                aria-current={isActive ? "page" : undefined}
+                aria-current={isActive ? 'page' : undefined}
                 className={
                   isCta
-                    ? "rounded-pill bg-primary px-4.5 py-3 text-[13px] font-bold text-white transition-colors hover:bg-primary-strong active:translate-y-px"
-                    : `text-[13px] font-bold transition-colors hover:text-primary active:translate-y-px ${isActive ? "text-primary" : ""}`
+                    ? 'rounded-pill bg-primary px-4.5 py-3 text-[13px] font-bold text-white transition-colors hover:bg-primary-strong active:translate-y-px'
+                    : `text-[13px] font-bold transition-colors hover:text-primary active:translate-y-px ${isActive ? 'text-primary' : ''}`
                 }
               >
                 {item.label}
@@ -1163,9 +1193,9 @@ export default function SiteHeader() {
 `src/components/SiteFooter.tsx` (includes retire item 26, legal links):
 
 ```tsx
-import Link from "next/link";
-import { contact } from "@/content/contact";
-import { site } from "@/content/site";
+import Link from 'next/link';
+import { contact } from '@/content/contact';
+import { site } from '@/content/site';
 
 export default function SiteFooter() {
   return (
@@ -1178,20 +1208,28 @@ export default function SiteFooter() {
             </span>
             <span className="block">
               <strong className="block text-sm">{site.name}</strong>
-              <small className="block text-[11px] text-[#8fa8ba]">{site.role}</small>
+              <small className="block text-[11px] text-[#8fa8ba]">
+                {site.role}
+              </small>
             </span>
           </Link>
           <p className="mt-4.5 max-w-[470px] text-xs text-[#8fa8ba]">
-            Strona informacyjna. Zakres produktów zależy od posiadanych uprawnień oraz
-            aktualnej współpracy z partnerami.
+            Strona informacyjna. Zakres produktów zależy od posiadanych
+            uprawnień oraz aktualnej współpracy z partnerami.
           </p>
         </div>
 
         <div className="flex flex-col gap-2.5">
           <strong>Serwis</strong>
-          <Link className="text-[13px] text-[#bed0dd]" href="/#how-it-works">Jak działam</Link>
-          <Link className="text-[13px] text-[#bed0dd]" href="/#services">Usługi</Link>
-          <Link className="text-[13px] text-[#bed0dd]" href="/#partners">Partnerzy</Link>
+          <Link className="text-[13px] text-[#bed0dd]" href="/#how-it-works">
+            Jak działam
+          </Link>
+          <Link className="text-[13px] text-[#bed0dd]" href="/#services">
+            Usługi
+          </Link>
+          <Link className="text-[13px] text-[#bed0dd]" href="/#partners">
+            Partnerzy
+          </Link>
           <Link className="text-[13px] text-[#bed0dd]" href="/privacy-policy">
             Polityka prywatności
           </Link>
@@ -1199,8 +1237,13 @@ export default function SiteFooter() {
 
         <div className="flex flex-col gap-2.5">
           <strong>Kontakt</strong>
-          <a className="text-[13px] text-[#bed0dd]" href={contact.phoneHref}>{contact.phone}</a>
-          <a className="text-[13px] text-[#bed0dd]" href={`mailto:${contact.email}`}>
+          <a className="text-[13px] text-[#bed0dd]" href={contact.phoneHref}>
+            {contact.phone}
+          </a>
+          <a
+            className="text-[13px] text-[#bed0dd]"
+            href={`mailto:${contact.email}`}
+          >
             {contact.email}
           </a>
         </div>
@@ -1208,7 +1251,9 @@ export default function SiteFooter() {
 
       <div className="mx-auto mt-10 flex w-[min(100%-40px,var(--container-site))] flex-col gap-1.5 border-t border-white/10 pt-5 text-[11px] text-[#7893a6] md:flex-row md:justify-between">
         <span>
-          &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span> {site.name}
+          &copy;{' '}
+          <span suppressHydrationWarning>{new Date().getFullYear()}</span>{' '}
+          {site.name}
         </span>
       </div>
     </footer>
@@ -1228,22 +1273,20 @@ Expected: 2 passed.
 In `src/app/layout.tsx`, replace the `<body>` children with:
 
 ```tsx
-      <body
-        className={`${dmSans.variable} ${playfair.variable} ${manrope.variable}`}
-      >
-        <SkipLink />
-        <SiteHeader />
-        {children}
-        <SiteFooter />
-      </body>
+<body className={`${dmSans.variable} ${playfair.variable} ${manrope.variable}`}>
+  <SkipLink />
+  <SiteHeader />
+  {children}
+  <SiteFooter />
+</body>
 ```
 
 And add the imports below the font imports:
 
 ```tsx
-import SiteFooter from "@/components/SiteFooter";
-import SiteHeader from "@/components/SiteHeader";
-import SkipLink from "@/components/SkipLink";
+import SiteFooter from '@/components/SiteFooter';
+import SiteHeader from '@/components/SiteHeader';
+import SkipLink from '@/components/SkipLink';
 ```
 
 - [ ] **Step 6: Verify the build**
@@ -1265,10 +1308,12 @@ git commit -m "feat: add layout shell with skip link, header and footer"
 Replaces the legacy `IntersectionObserver` plus `.reveal { opacity: 0 }` pattern. Fixes the brief's section 9 item "content is invisible without JS" and implements reduced motion as "degrade to static" rather than zeroed durations.
 
 **Files:**
+
 - Create: `src/components/Reveal.tsx`
 - Test: `tests/unit/reveal.test.tsx`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: `<Reveal delay?: number; className?: string; children: React.ReactNode />`, default export, client component.
 
@@ -1277,14 +1322,14 @@ Replaces the legacy `IntersectionObserver` plus `.reveal { opacity: 0 }` pattern
 `tests/unit/reveal.test.tsx`:
 
 ```tsx
-import { render, screen } from "@testing-library/react";
-import { beforeAll, describe, expect, it, vi } from "vitest";
-import Reveal from "@/components/Reveal";
+import { render, screen } from '@testing-library/react';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import Reveal from '@/components/Reveal';
 
 beforeAll(() => {
   // jsdom does not implement matchMedia; simulate reduced motion being on
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("prefers-reduced-motion"),
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('prefers-reduced-motion'),
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
@@ -1294,14 +1339,14 @@ beforeAll(() => {
   }));
 });
 
-describe("Reveal", () => {
-  it("renders children so content is never hidden behind motion", () => {
+describe('Reveal', () => {
+  it('renders children so content is never hidden behind motion', () => {
     render(
       <Reveal>
         <p>Widoczna treść</p>
-      </Reveal>,
+      </Reveal>
     );
-    expect(screen.getByText("Widoczna treść")).toBeVisible();
+    expect(screen.getByText('Widoczna treść')).toBeVisible();
   });
 });
 ```
@@ -1316,10 +1361,10 @@ Expected: FAIL, cannot resolve `@/components/Reveal`.
 `src/components/Reveal.tsx`:
 
 ```tsx
-"use client";
+'use client';
 
-import { motion, useInView, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
 
 type RevealProps = {
   children: React.ReactNode;
@@ -1327,7 +1372,11 @@ type RevealProps = {
   className?: string;
 };
 
-export default function Reveal({ children, delay = 0, className }: RevealProps) {
+export default function Reveal({
+  children,
+  delay = 0,
+  className,
+}: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const inView = useInView(ref, { once: true, amount: 0.12 });
@@ -1379,12 +1428,14 @@ git commit -m "feat: add Reveal primitive with static reduced-motion fallback"
 The marquee becomes a sibling of the hero rather than a child, which is retire item 7.
 
 **Files:**
+
 - Move: `assets/logos/*` to `public/logos/*` (22 files)
 - Create: `src/app/_components/Hero.tsx`, `src/app/_components/PartnerMarquee.tsx`
 - Modify: `src/app/page.tsx`, `src/app/globals.css`
 - Test: `tests/e2e/logos.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `contact`, `site`, `marqueePartners` (Task 3), `Reveal` (Task 5).
 - Produces: `<Hero />` and `<PartnerMarquee />`, default exports, server components.
 
@@ -1409,7 +1460,7 @@ Expected output: `22`
 Append inside the existing `@theme` block in `src/app/globals.css`:
 
 ```css
-  --animate-marquee: marquee 26s linear infinite;
+--animate-marquee: marquee 26s linear infinite;
 ```
 
 And append at the end of the file, outside any layer:
@@ -1427,13 +1478,16 @@ And append at the end of the file, outside any layer:
 `src/app/_components/Hero.tsx`:
 
 ```tsx
-import { contact } from "@/content/contact";
-import { site } from "@/content/site";
-import Reveal from "@/components/Reveal";
+import { contact } from '@/content/contact';
+import { site } from '@/content/site';
+import Reveal from '@/components/Reveal';
 
 export default function Hero() {
   return (
-    <section id="top" className="relative overflow-hidden bg-gradient-to-b from-surface-blue/90 to-page/98 pb-11 pt-25">
+    <section
+      id="top"
+      className="relative overflow-hidden bg-gradient-to-b from-surface-blue/90 to-page/98 pb-11 pt-25"
+    >
       <div className="pointer-events-none absolute right-[2%] top-[2%] size-[390px] rounded-full bg-[#b8dff5] opacity-36 blur-[90px]" />
       <div className="pointer-events-none absolute bottom-[2%] left-[-5%] size-[280px] rounded-full bg-[#f1dfba] opacity-36 blur-[90px]" />
 
@@ -1449,8 +1503,9 @@ export default function Hero() {
           </h1>
 
           <p className="max-w-[65ch] text-[19px] text-muted">
-            Pomagam porównać dostępne rozwiązania, wyjaśniam najważniejsze różnice i
-            prowadzę przez cały proces, od pierwszej rozmowy do wyboru właściwej oferty.
+            Pomagam porównać dostępne rozwiązania, wyjaśniam najważniejsze
+            różnice i prowadzę przez cały proces, od pierwszej rozmowy do wyboru
+            właściwej oferty.
           </p>
 
           <div className="my-8.5 flex flex-wrap gap-3.5">
@@ -1469,8 +1524,8 @@ export default function Hero() {
           </div>
 
           <p className="max-w-[65ch] text-[11px] text-[#8190a1]">
-            Zakres dostępnych produktów zależy od aktualnych uprawnień i współpracy z
-            daną instytucją.
+            Zakres dostępnych produktów zależy od aktualnych uprawnień i
+            współpracy z daną instytucją.
           </p>
         </Reveal>
 
@@ -1496,13 +1551,17 @@ export default function Hero() {
                 <span className="font-label text-[10px] font-extrabold uppercase tracking-[0.12em] text-primary">
                   Twój doradca
                 </span>
-                <p className="mb-1.5 mt-1 font-label text-2xl font-bold">{site.name}</p>
+                <p className="mb-1.5 mt-1 font-label text-2xl font-bold">
+                  {site.name}
+                </p>
                 <p className="text-[13px] text-muted">
                   Ubezpieczenia, kredyty i rozwiązania finansowe
                 </p>
               </div>
               <div className="flex flex-col justify-center text-xs font-bold md:text-right">
-                <a className="text-primary" href={contact.phoneHref}>{contact.phone}</a>
+                <a className="text-primary" href={contact.phoneHref}>
+                  {contact.phone}
+                </a>
                 <a href={`mailto:${contact.email}`}>{contact.email}</a>
               </div>
             </div>
@@ -1521,7 +1580,7 @@ Two Global Constraint edits applied here: the hero lead's em-dash became a comma
 `src/app/_components/PartnerMarquee.tsx`:
 
 ```tsx
-import { marqueePartners } from "@/content/partners";
+import { marqueePartners } from '@/content/partners';
 
 export default function PartnerMarquee() {
   return (
@@ -1548,7 +1607,7 @@ export default function PartnerMarquee() {
                 loading="lazy"
                 /* mix-blend-mode blends the white background of raster logos (JPEG/PNG) */
                 className={`block h-6.5 w-auto mix-blend-multiply grayscale opacity-55${
-                  i >= marqueePartners.length ? " motion-reduce:hidden" : ""
+                  i >= marqueePartners.length ? ' motion-reduce:hidden' : ''
                 }`}
               />
             ))}
@@ -1567,8 +1626,8 @@ Every marquee logo is `aria-hidden` because the accessible list of partners is t
 `src/app/page.tsx`:
 
 ```tsx
-import Hero from "@/app/_components/Hero";
-import PartnerMarquee from "@/app/_components/PartnerMarquee";
+import Hero from '@/app/_components/Hero';
+import PartnerMarquee from '@/app/_components/PartnerMarquee';
 
 export default function HomePage() {
   return (
@@ -1585,10 +1644,14 @@ export default function HomePage() {
 `tests/e2e/logos.spec.ts`:
 
 ```ts
-import { expect, test } from "@playwright/test";
-import { bankPartners, insurancePartners, marqueePartners } from "../../src/content/partners";
+import { expect, test } from '@playwright/test';
+import {
+  bankPartners,
+  insurancePartners,
+  marqueePartners,
+} from '../../src/content/partners';
 
-test("every logo file resolves with HTTP 200", async ({ request }) => {
+test('every logo file resolves with HTTP 200', async ({ request }) => {
   const files = new Set<string>([
     ...marqueePartners,
     ...insurancePartners.map((p) => p.file),
@@ -1601,10 +1664,10 @@ test("every logo file resolves with HTTP 200", async ({ request }) => {
   }
 });
 
-test("the marquee lives outside the hero section", async ({ page }) => {
-  await page.goto("/");
+test('the marquee lives outside the hero section', async ({ page }) => {
+  await page.goto('/');
   const heroContainsMarquee = await page.evaluate(() => {
-    const hero = document.querySelector("#top");
+    const hero = document.querySelector('#top');
     const marquee = document.querySelector('[aria-label="Wybrani partnerzy"]');
     return Boolean(hero && marquee && hero.contains(marquee));
   });
@@ -1631,11 +1694,13 @@ git commit -m "feat: port hero, move logos to public, lift marquee out of the he
 The progress indicator moves from animated `height` to `transform: scaleY()`, which is retire item 25.
 
 **Files:**
+
 - Create: `src/app/_components/Journey.tsx`, `src/app/_components/JourneyTrack.tsx`
 - Modify: `src/app/page.tsx`
 - Test: `tests/unit/journey-track.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `journeySteps`, `benefits` (Task 3), `Reveal` (Task 5).
 - Produces:
   - `<Journey />`, default export, **Server Component**.
@@ -1646,13 +1711,13 @@ The progress indicator moves from animated `height` to `transform: scaleY()`, wh
 `tests/unit/journey.test.tsx`:
 
 ```tsx
-import { render, screen } from "@testing-library/react";
-import { beforeAll, describe, expect, it, vi } from "vitest";
-import JourneyTrack from "@/app/_components/JourneyTrack";
+import { render, screen } from '@testing-library/react';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import JourneyTrack from '@/app/_components/JourneyTrack';
 
 beforeAll(() => {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("prefers-reduced-motion"),
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('prefers-reduced-motion'),
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
@@ -1662,27 +1727,27 @@ beforeAll(() => {
   }));
 });
 
-describe("JourneyTrack", () => {
-  it("renders server-provided children untouched", () => {
+describe('JourneyTrack', () => {
+  it('renders server-provided children untouched', () => {
     render(
       <JourneyTrack>
         <article>Krok pierwszy</article>
         <article>Krok drugi</article>
-      </JourneyTrack>,
+      </JourneyTrack>
     );
-    expect(screen.getAllByRole("article")).toHaveLength(2);
-    expect(screen.getByText("Krok pierwszy")).toBeVisible();
+    expect(screen.getAllByRole('article')).toHaveLength(2);
+    expect(screen.getByText('Krok pierwszy')).toBeVisible();
   });
 
-  it("drives the progress bar with a transform, never with height", () => {
+  it('drives the progress bar with a transform, never with height', () => {
     render(
       <JourneyTrack>
         <article>Krok</article>
-      </JourneyTrack>,
+      </JourneyTrack>
     );
-    const bar = screen.getByTestId("journey-progress");
-    expect(bar.style.height).toBe("");
-    expect(bar.className).toContain("origin-top");
+    const bar = screen.getByTestId('journey-progress');
+    expect(bar.style.height).toBe('');
+    expect(bar.className).toContain('origin-top');
   });
 });
 ```
@@ -1699,12 +1764,22 @@ This is the only part of the section that needs the browser. The step cards arri
 `src/app/_components/JourneyTrack.tsx`:
 
 ```tsx
-"use client";
+'use client';
 
-import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
-import { useRef } from "react";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'motion/react';
+import { useRef } from 'react';
 
-export default function JourneyTrack({ children }: { children: React.ReactNode }) {
+export default function JourneyTrack({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
 
@@ -1712,7 +1787,7 @@ export default function JourneyTrack({ children }: { children: React.ReactNode }
   // measuring offsetHeight in JS. Progress is a transform, never a height.
   const { scrollYProgress } = useScroll({
     target: trackRef,
-    offset: ["start center", "end center"],
+    offset: ['start center', 'end center'],
   });
   const scaleY = useSpring(useTransform(scrollYProgress, [0, 1], [0, 1]), {
     stiffness: 100,
@@ -1742,10 +1817,10 @@ No `"use client"` here. The five step cards, the sticky column and the benefits 
 `src/app/_components/Journey.tsx`:
 
 ```tsx
-import JourneyTrack from "@/app/_components/JourneyTrack";
-import { benefits } from "@/content/benefits";
-import { journeySteps } from "@/content/journey";
-import Reveal from "@/components/Reveal";
+import JourneyTrack from '@/app/_components/JourneyTrack';
+import { benefits } from '@/content/benefits';
+import { journeySteps } from '@/content/journey';
+import Reveal from '@/components/Reveal';
 
 export default function Journey() {
   return (
@@ -1759,16 +1834,19 @@ export default function Journey() {
             Od pierwszego kontaktu do decyzji, bez chaosu i bez presji.
           </h2>
           <p className="max-w-[65ch] text-lg text-muted">
-            Każdy etap ma konkretny cel. Najpierw poznaję Twoją sytuację, później
-            porządkujemy potrzeby, a dopiero na końcu porównujemy dostępne możliwości.
+            Każdy etap ma konkretny cel. Najpierw poznaję Twoją sytuację,
+            później porządkujemy potrzeby, a dopiero na końcu porównujemy
+            dostępne możliwości.
           </p>
 
           <figure className="mt-10 rounded-2xl border border-line bg-page p-6.5 shadow-card-soft">
             <blockquote className="text-xl font-bold leading-relaxed">
-              Dobra decyzja finansowa zaczyna się od rozmowy, a nie od wyboru pierwszej
-              oferty.
+              Dobra decyzja finansowa zaczyna się od rozmowy, a nie od wyboru
+              pierwszej oferty.
             </blockquote>
-            <figcaption className="mt-4.5 text-muted">Hanna Khudziakova</figcaption>
+            <figcaption className="mt-4.5 text-muted">
+              Hanna Khudziakova
+            </figcaption>
           </figure>
 
           <a
@@ -1789,7 +1867,9 @@ export default function Journey() {
                 <span className="font-label text-[11px] font-extrabold uppercase tracking-[0.12em] text-primary">
                   {step.kicker}
                 </span>
-                <h3 className="mb-2 mt-1.5 font-display text-2xl">{step.title}</h3>
+                <h3 className="mb-2 mt-1.5 font-display text-2xl">
+                  {step.title}
+                </h3>
                 <p className="max-w-[65ch] text-muted">{step.body}</p>
                 <div className="mt-4.5 flex flex-wrap gap-2">
                   {step.tags.map((tag) => (
@@ -1839,9 +1919,9 @@ Expected: 2 passed.
 In `src/app/page.tsx`, add the import and render `<Journey />` after `<PartnerMarquee />`:
 
 ```tsx
-import Hero from "@/app/_components/Hero";
-import Journey from "@/app/_components/Journey";
-import PartnerMarquee from "@/app/_components/PartnerMarquee";
+import Hero from '@/app/_components/Hero';
+import Journey from '@/app/_components/Journey';
+import PartnerMarquee from '@/app/_components/PartnerMarquee';
 
 export default function HomePage() {
   return (
@@ -1868,11 +1948,13 @@ git commit -m "feat: port journey timeline with a transform-driven progress leaf
 Retire item 10: the six emoji become icon-library glyphs.
 
 **Files:**
+
 - Create: `src/app/_components/Services.tsx`
 - Modify: `src/app/page.tsx`
 - Test: `tests/unit/services.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `services` and `ServiceIconName` (Task 3), `Reveal` (Task 5).
 - Produces: `<Services />`, default export, **Server Component**.
 
@@ -1883,13 +1965,13 @@ Phosphor's default entry (`@phosphor-icons/react`) is client-only, which would f
 `tests/unit/services.test.tsx`:
 
 ```tsx
-import { render, screen } from "@testing-library/react";
-import { beforeAll, describe, expect, it, vi } from "vitest";
-import Services from "@/app/_components/Services";
+import { render, screen } from '@testing-library/react';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import Services from '@/app/_components/Services';
 
 beforeAll(() => {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("prefers-reduced-motion"),
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('prefers-reduced-motion'),
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
@@ -1899,23 +1981,27 @@ beforeAll(() => {
   }));
 });
 
-describe("Services", () => {
-  it("renders all six service titles", () => {
+describe('Services', () => {
+  it('renders all six service titles', () => {
     render(<Services />);
-    expect(screen.getAllByRole("article")).toHaveLength(6);
-    expect(screen.getByText("Ubezpieczenia na życie")).toBeInTheDocument();
-    expect(screen.getByText("Kredyty i finansowanie")).toBeInTheDocument();
+    expect(screen.getAllByRole('article')).toHaveLength(6);
+    expect(screen.getByText('Ubezpieczenia na życie')).toBeInTheDocument();
+    expect(screen.getByText('Kredyty i finansowanie')).toBeInTheDocument();
   });
 
-  it("uses one shared CTA label across every card", () => {
+  it('uses one shared CTA label across every card', () => {
     render(<Services />);
-    expect(screen.getAllByRole("link", { name: "Bezpłatna konsultacja" })).toHaveLength(6);
+    expect(
+      screen.getAllByRole('link', { name: 'Bezpłatna konsultacja' })
+    ).toHaveLength(6);
   });
 
-  it("contains no emoji", () => {
+  it('contains no emoji', () => {
     const { container } = render(<Services />);
     // Zakres Emoji Presentation; legacy uzywalo ciezko-emoji ikon
-    expect(container.textContent ?? "").not.toMatch(/\p{Extended_Pictographic}/u);
+    expect(container.textContent ?? '').not.toMatch(
+      /\p{Extended_Pictographic}/u
+    );
   });
 });
 ```
@@ -1938,9 +2024,9 @@ import {
   Heart,
   House,
   type Icon,
-} from "@phosphor-icons/react/ssr";
-import { services, type ServiceIconName } from "@/content/services";
-import Reveal from "@/components/Reveal";
+} from '@phosphor-icons/react/ssr';
+import { services, type ServiceIconName } from '@/content/services';
+import Reveal from '@/components/Reveal';
 
 const icons: Record<ServiceIconName, Icon> = {
   heart: Heart,
@@ -1961,8 +2047,8 @@ export default function Services() {
               Wybierz temat, który chcesz uporządkować.
             </h2>
             <p className="max-w-[65ch] text-muted">
-              Proste produkty mogą zostać obsłużone online. Przy bardziej złożonych
-              decyzjach najlepszym początkiem jest konsultacja.
+              Proste produkty mogą zostać obsłużone online. Przy bardziej
+              złożonych decyzjach najlepszym początkiem jest konsultacja.
             </p>
           </div>
         </Reveal>
@@ -1974,9 +2060,15 @@ export default function Services() {
               <Reveal key={service.id}>
                 <article className="flex h-full min-h-[300px] flex-col rounded-2xl border border-line bg-surface p-7.5 shadow-card-soft transition hover:-translate-y-1 active:translate-y-0">
                   <div className="grid size-12 place-items-center rounded-lg bg-surface-blue">
-                    <IconComponent size={24} weight="duotone" className="text-primary" />
+                    <IconComponent
+                      size={24}
+                      weight="duotone"
+                      className="text-primary"
+                    />
                   </div>
-                  <h3 className="mb-2.5 mt-6 font-display text-[22px]">{service.title}</h3>
+                  <h3 className="mb-2.5 mt-6 font-display text-[22px]">
+                    {service.title}
+                  </h3>
                   <p className="max-w-[65ch] text-muted">{service.body}</p>
                   <a
                     href="#contact"
@@ -2018,11 +2110,13 @@ git commit -m "feat: port services section with Phosphor icons and one CTA label
 ### Task 9: Partners section
 
 **Files:**
+
 - Create: `src/app/_components/Partners.tsx`
 - Modify: `src/app/page.tsx`
 - Test: `tests/unit/partners.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `insurancePartners`, `bankPartners` (Task 3), `Reveal` (Task 5).
 - Produces: `<Partners />`, default export, server component.
 
@@ -2031,24 +2125,26 @@ git commit -m "feat: port services section with Phosphor icons and one CTA label
 `tests/unit/partners.test.tsx`:
 
 ```tsx
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import Partners from "@/app/_components/Partners";
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import Partners from '@/app/_components/Partners';
 
-describe("Partners", () => {
-  it("renders 22 named logos with alt text", () => {
+describe('Partners', () => {
+  it('renders 22 named logos with alt text', () => {
     render(<Partners />);
-    const images = screen.getAllByRole("img");
+    const images = screen.getAllByRole('img');
     expect(images).toHaveLength(22);
     for (const img of images) {
-      expect(img).toHaveAttribute("alt", expect.stringMatching(/\S/));
+      expect(img).toHaveAttribute('alt', expect.stringMatching(/\S/));
     }
   });
 
-  it("labels the two groups", () => {
+  it('labels the two groups', () => {
     render(<Partners />);
-    expect(screen.getByRole("heading", { name: "Ubezpieczenia" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Banki" })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Ubezpieczenia' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Banki' })).toBeInTheDocument();
   });
 });
 ```
@@ -2063,8 +2159,8 @@ Expected: FAIL, cannot resolve `@/app/_components/Partners`.
 `src/app/_components/Partners.tsx`:
 
 ```tsx
-import { bankPartners, insurancePartners } from "@/content/partners";
-import Reveal from "@/components/Reveal";
+import { bankPartners, insurancePartners } from '@/content/partners';
+import Reveal from '@/components/Reveal';
 
 type Group = {
   heading: string;
@@ -2074,11 +2170,11 @@ type Group = {
 
 const groups: Group[] = [
   {
-    heading: "Ubezpieczenia",
-    note: "13 marek reprezentujących 17 podmiotów",
+    heading: 'Ubezpieczenia',
+    note: '13 marek reprezentujących 17 podmiotów',
     items: insurancePartners,
   },
-  { heading: "Banki", note: "9 instytucji we współpracy", items: bankPartners },
+  { heading: 'Banki', note: '9 instytucji we współpracy', items: bankPartners },
 ];
 
 export default function Partners() {
@@ -2091,8 +2187,9 @@ export default function Partners() {
               17 firm ubezpieczeniowych oraz 9 banków.
             </h2>
             <p className="max-w-[65ch] text-muted">
-              Na stronie głównej pokazuję marki w czytelnej formie. Pełne nazwy prawne oraz
-              zakres produktów mogę przedstawić na osobnej podstronie.
+              Na stronie głównej pokazuję marki w czytelnej formie. Pełne nazwy
+              prawne oraz zakres produktów mogę przedstawić na osobnej
+              podstronie.
             </p>
           </div>
         </Reveal>
@@ -2103,7 +2200,9 @@ export default function Partners() {
               <div className="rounded-4xl border border-line bg-page p-7.5">
                 <div className="mb-5.5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <h3 className="font-display text-2xl">{group.heading}</h3>
-                  <span className="text-xs tabular-nums text-muted">{group.note}</span>
+                  <span className="text-xs tabular-nums text-muted">
+                    {group.note}
+                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                   {group.items.map((p) => (
@@ -2151,11 +2250,13 @@ git commit -m "feat: port partners section with both logo grids"
 Retire item 1 forbids porting the div-based fake form. It becomes a labeled placeholder slot instead, which is honest and keeps the section renderable until the real embed code arrives.
 
 **Files:**
+
 - Create: `src/app/_components/Consultation.tsx`
 - Modify: `src/app/page.tsx`
 - Test: `tests/unit/consultation.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `contact` (Task 3), `Reveal` (Task 5).
 - Produces: `<Consultation />`, default export, server component.
 
@@ -2164,28 +2265,28 @@ Retire item 1 forbids porting the div-based fake form. It becomes a labeled plac
 `tests/unit/consultation.test.tsx`:
 
 ```tsx
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import Consultation from "@/app/_components/Consultation";
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import Consultation from '@/app/_components/Consultation';
 
-describe("Consultation", () => {
-  it("renders no fake form controls", () => {
+describe('Consultation', () => {
+  it('renders no fake form controls', () => {
     render(<Consultation />);
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
-    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
-  it("exposes the widget slot for the real embed", () => {
+  it('exposes the widget slot for the real embed', () => {
     render(<Consultation />);
-    expect(screen.getByTestId("lendi-slot")).toBeInTheDocument();
+    expect(screen.getByTestId('lendi-slot')).toBeInTheDocument();
   });
 
-  it("offers the contact details as real links", () => {
+  it('offers the contact details as real links', () => {
     render(<Consultation />);
-    expect(screen.getByRole("link", { name: /\+48/ })).toHaveAttribute(
-      "href",
-      "tel:+48000000000",
+    expect(screen.getByRole('link', { name: /\+48/ })).toHaveAttribute(
+      'href',
+      'tel:+48000000000'
     );
   });
 });
@@ -2201,8 +2302,8 @@ Expected: FAIL, cannot resolve `@/app/_components/Consultation`.
 `src/app/_components/Consultation.tsx`:
 
 ```tsx
-import { contact } from "@/content/contact";
-import Reveal from "@/components/Reveal";
+import { contact } from '@/content/contact';
+import Reveal from '@/components/Reveal';
 
 export default function Consultation() {
   return (
@@ -2214,8 +2315,8 @@ export default function Consultation() {
               Zacznij od krótkiej rozmowy.
             </h2>
             <p className="max-w-[65ch] text-[#bfd0de]">
-              Wypełnij formularz konsultacyjny Lendi. Skontaktuję się z Tobą, aby poznać
-              temat i ustalić dalszy sposób działania.
+              Wypełnij formularz konsultacyjny Lendi. Skontaktuję się z Tobą,
+              aby poznać temat i ustalić dalszy sposób działania.
             </p>
 
             <ul className="mt-4 list-disc pl-4.5 text-[#d2dee8]">
@@ -2225,11 +2326,17 @@ export default function Consultation() {
             </ul>
 
             <div className="mt-8 grid gap-3">
-              <a className="border-b border-white/10 py-3.5" href={contact.phoneHref}>
+              <a
+                className="border-b border-white/10 py-3.5"
+                href={contact.phoneHref}
+              >
                 <small className="block text-[#89a2b7]">Telefon</small>
                 <strong className="block tabular-nums">{contact.phone}</strong>
               </a>
-              <a className="border-b border-white/10 py-3.5" href={`mailto:${contact.email}`}>
+              <a
+                className="border-b border-white/10 py-3.5"
+                href={`mailto:${contact.email}`}
+              >
                 <small className="block text-[#89a2b7]">E-mail</small>
                 <strong className="block">{contact.email}</strong>
               </a>
@@ -2252,8 +2359,9 @@ export default function Consultation() {
                   Miejsce na formularz Lendi
                 </p>
                 <p className="mx-auto mt-2 max-w-[46ch] text-[13px] text-muted">
-                  Po otrzymaniu oficjalnego kodu widget zostanie osadzony w tym miejscu.
-                  Do tego czasu prosimy o contact telefoniczny lub e-mail.
+                  Po otrzymaniu oficjalnego kodu widget zostanie osadzony w tym
+                  miejscu. Do tego czasu prosimy o contact telefoniczny lub
+                  e-mail.
                 </p>
               </div>
             </div>
@@ -2290,10 +2398,12 @@ git commit -m "feat: port consultation section with an honest Lendi slot"
 **Requires the URL-change confirmation from Global Constraints before starting.**
 
 **Files:**
+
 - Create: `src/app/about-me/page.tsx`, `src/app/about-me/_components/AboutHero.tsx`, `src/app/about-me/_components/AboutWorking.tsx`
 - Test: `tests/e2e/about-me.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `contact`, `site` (Task 3), `Reveal` (Task 5).
 - Produces: route `/about-me`; `<AboutHero />` and `<AboutWorking />`, default exports, server components.
 
@@ -2302,25 +2412,27 @@ git commit -m "feat: port consultation section with an honest Lendi slot"
 `tests/e2e/about-me.spec.ts`:
 
 ```ts
-import { expect, test } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
-test("the advisor page renders its heading and philosophy", async ({ page }) => {
-  await page.goto("/about-me");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "dobra decyzja finansowa",
+test('the advisor page renders its heading and philosophy', async ({
+  page,
+}) => {
+  await page.goto('/about-me');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(
+    'dobra decyzja finansowa'
   );
-  await expect(page.getByText("Moja filozofia pracy")).toBeVisible();
+  await expect(page.getByText('Moja filozofia pracy')).toBeVisible();
 });
 
-test("the advisor page has no dead links", async ({ page }) => {
-  await page.goto("/about-me");
+test('the advisor page has no dead links', async ({ page }) => {
+  await page.goto('/about-me');
   const deadLinks = await page.locator('a[href="#"]').count();
   expect(deadLinks).toBe(0);
 });
 
-test("the four how-I-work blocks render", async ({ page }) => {
-  await page.goto("/about-me");
-  await expect(page.getByRole("article")).toHaveCount(4);
+test('the four how-I-work blocks render', async ({ page }) => {
+  await page.goto('/about-me');
+  await expect(page.getByRole('article')).toHaveCount(4);
 });
 ```
 
@@ -2334,8 +2446,8 @@ Expected: FAIL, 404 on `/about-me`.
 `src/app/about-me/_components/AboutHero.tsx`:
 
 ```tsx
-import { contact } from "@/content/contact";
-import Reveal from "@/components/Reveal";
+import { contact } from '@/content/contact';
+import Reveal from '@/components/Reveal';
 
 export default function AboutHero() {
   return (
@@ -2357,20 +2469,21 @@ export default function AboutHero() {
 
         <Reveal delay={0.12}>
           <h1 className="mb-5 mt-2.5 max-w-[720px] font-display text-[clamp(40px,4.6vw,58px)] leading-[1.06] tracking-[-0.028em]">
-            Wierzę, że dobra decyzja finansowa zaczyna się od zrozumienia Twojej sytuacji.
+            Wierzę, że dobra decyzja finansowa zaczyna się od zrozumienia Twojej
+            sytuacji.
           </h1>
           <p className="max-w-[65ch] text-lg text-muted">
-            Każda współpraca rozpoczyna się od rozmowy. Najpierw poznaję Twoje potrzeby,
-            później analizuję dostępne możliwości, a dopiero na końcu wspólnie wybieramy
-            rozwiązanie.
+            Każda współpraca rozpoczyna się od rozmowy. Najpierw poznaję Twoje
+            potrzeby, później analizuję dostępne możliwości, a dopiero na końcu
+            wspólnie wybieramy rozwiązanie.
           </p>
 
           <div className="mt-6 rounded-r-xl border-l-4 border-accent bg-surface p-6 shadow-card-soft">
             <strong>Moja filozofia pracy</strong>
             <p className="mt-2 max-w-[65ch] text-muted">
-              Nie wierzę w sprzedaż jednej oferty każdemu klientowi. Wolę poświęcić więcej
-              czasu na zrozumienie sytuacji niż proponować rozwiązanie, które nie będzie
-              odpowiadało Twoim potrzebom.
+              Nie wierzę w sprzedaż jednej oferty każdemu klientowi. Wolę
+              poświęcić więcej czasu na zrozumienie sytuacji niż proponować
+              rozwiązanie, które nie będzie odpowiadało Twoim potrzebom.
             </p>
           </div>
 
@@ -2382,7 +2495,9 @@ export default function AboutHero() {
               <small className="block font-label text-[10px] font-extrabold uppercase tracking-[0.09em] text-[#8797a8]">
                 Telefon
               </small>
-              <strong className="mt-1.5 block text-[13px] tabular-nums">{contact.phone}</strong>
+              <strong className="mt-1.5 block text-[13px] tabular-nums">
+                {contact.phone}
+              </strong>
             </a>
             <a
               href={`mailto:${contact.email}`}
@@ -2391,7 +2506,9 @@ export default function AboutHero() {
               <small className="block font-label text-[10px] font-extrabold uppercase tracking-[0.09em] text-[#8797a8]">
                 E-mail
               </small>
-              <strong className="mt-1.5 block text-[13px]">{contact.email}</strong>
+              <strong className="mt-1.5 block text-[13px]">
+                {contact.email}
+              </strong>
             </a>
             <div className="rounded-lg border border-line bg-white/82 px-4 py-3.5">
               <small className="block font-label text-[10px] font-extrabold uppercase tracking-[0.09em] text-[#8797a8]">
@@ -2416,31 +2533,31 @@ The legacy Facebook tile pointed at `href="#"`. It is dropped rather than ported
 `src/app/about-me/_components/AboutWorking.tsx`:
 
 ```tsx
-import Reveal from "@/components/Reveal";
+import Reveal from '@/components/Reveal';
 
 const blocks = [
   {
-    n: "01",
-    title: "Najpierw rozmawiamy",
-    body: "Pierwszym krokiem nie jest wybór produktu. Chcę zrozumieć Twoją sytuację, odpowiedzieć na pytania i uporządkować potrzeby. Dopiero wtedy porównujemy dostępne rozwiązania.",
+    n: '01',
+    title: 'Najpierw rozmawiamy',
+    body: 'Pierwszym krokiem nie jest wybór produktu. Chcę zrozumieć Twoją sytuację, odpowiedzieć na pytania i uporządkować potrzeby. Dopiero wtedy porównujemy dostępne rozwiązania.',
     featured: true,
   },
   {
-    n: "02",
-    title: "Porównuję możliwości",
-    body: "Różnice, warunki i ograniczenia wyjaśniam prostym językiem.",
+    n: '02',
+    title: 'Porównuję możliwości',
+    body: 'Różnice, warunki i ograniczenia wyjaśniam prostym językiem.',
     featured: false,
   },
   {
-    n: "03",
-    title: "Bez presji",
-    body: "Decyzję podejmujesz świadomie i we własnym tempie.",
+    n: '03',
+    title: 'Bez presji',
+    body: 'Decyzję podejmujesz świadomie i we własnym tempie.',
     featured: false,
   },
   {
-    n: "04",
-    title: "Jestem również później",
-    body: "Możesz wrócić z pytaniami także po podpisaniu umowy.",
+    n: '04',
+    title: 'Jestem również później',
+    body: 'Możesz wrócić z pytaniami także po podpisaniu umowy.',
     featured: false,
   },
 ] as const;
@@ -2460,8 +2577,8 @@ export default function AboutWorking() {
               Czego możesz oczekiwać podczas współpracy?
             </h2>
             <p className="max-w-[65ch] text-muted">
-              Minimum formalności na początku, jasne wyjaśnienie możliwości i czas na
-              świadomą decyzję.
+              Minimum formalności na początku, jasne wyjaśnienie możliwości i
+              czas na świadomą decyzję.
             </p>
           </div>
         </Reveal>
@@ -2486,8 +2603,12 @@ export default function AboutWorking() {
                   <span className="font-label text-[11px] font-extrabold tracking-[0.12em] text-primary">
                     {b.n}
                   </span>
-                  <h3 className="mb-1.5 mt-2.5 font-display text-xl">{b.title}</h3>
-                  <p className="max-w-[65ch] text-[13px] text-muted">{b.body}</p>
+                  <h3 className="mb-1.5 mt-2.5 font-display text-xl">
+                    {b.title}
+                  </h3>
+                  <p className="max-w-[65ch] text-[13px] text-muted">
+                    {b.body}
+                  </p>
                 </article>
               </Reveal>
             ))}
@@ -2504,17 +2625,17 @@ export default function AboutWorking() {
 `src/app/about-me/page.tsx`:
 
 ```tsx
-import type { Metadata } from "next";
-import Link from "next/link";
-import AboutHero from "@/app/about-me/_components/AboutHero";
-import AboutWorking from "@/app/about-me/_components/AboutWorking";
-import Reveal from "@/components/Reveal";
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import AboutHero from '@/app/about-me/_components/AboutHero';
+import AboutWorking from '@/app/about-me/_components/AboutWorking';
+import Reveal from '@/components/Reveal';
 
 export const metadata: Metadata = {
-  title: "Poznaj Hannę",
+  title: 'Poznaj Hannę',
   description:
-    "Poznaj Hannę Khudziakovą: sposób pracy, bezpośredni kontakt i podejście do konsultacji ubezpieczeniowych oraz finansowych.",
-  alternates: { canonical: "/about-me" },
+    'Poznaj Hannę Khudziakovą: sposób pracy, bezpośredni kontakt i podejście do konsultacji ubezpieczeniowych oraz finansowych.',
+  alternates: { canonical: '/about-me' },
 };
 
 export default function AboutPage() {
@@ -2527,12 +2648,13 @@ export default function AboutPage() {
         <Reveal className="mx-auto w-[min(100%-40px,var(--container-site))]">
           <div className="rounded-4xl border border-line bg-surface-blue px-12 py-10">
             <blockquote className="max-w-[930px] font-display text-[clamp(27px,3vw,42px)] font-bold leading-snug">
-              Moim celem nie jest sprzedaż produktu. Chcę pomóc Ci podjąć decyzję, z którą
-              będziesz czuć się bezpiecznie również później.
+              Moim celem nie jest sprzedaż produktu. Chcę pomóc Ci podjąć
+              decyzję, z którą będziesz czuć się bezpiecznie również później.
             </blockquote>
             <p className="mt-3 max-w-[65ch] text-muted">
-              Masz pytania dotyczące ubezpieczenia, kredytu albo finansowania? Pierwsza
-              rozmowa pozwoli uporządkować temat i określić dalszy krok.
+              Masz pytania dotyczące ubezpieczenia, kredytu albo finansowania?
+              Pierwsza rozmowa pozwoli uporządkować temat i określić dalszy
+              krok.
             </p>
           </div>
         </Reveal>
@@ -2546,7 +2668,8 @@ export default function AboutPage() {
                 Porozmawiajmy o Twojej sytuacji.
               </h2>
               <p className="max-w-[65ch] text-[#bed0dd]">
-                Pierwsza rozmowa jest bez zobowiązań i nie wymaga przesyłania dokumentów.
+                Pierwsza rozmowa jest bez zobowiązań i nie wymaga przesyłania
+                dokumentów.
               </p>
             </div>
             <Link
@@ -2582,10 +2705,12 @@ git commit -m "feat: port the about-me page"
 Retire items 26 and 28.
 
 **Files:**
+
 - Create: `src/app/not-found.tsx`, `src/app/privacy-policy/page.tsx`
 - Test: `tests/e2e/routes.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `navItems` (Task 3).
 - Produces: routes `/privacy-policy` and the 404 boundary.
 
@@ -2594,21 +2719,27 @@ Retire items 26 and 28.
 `tests/e2e/routes.spec.ts`:
 
 ```ts
-import { expect, test } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
-test("unknown routes return a branded 404 with a way back", async ({ page }) => {
-  const response = await page.goto("/nie-ma-takiej-strony");
+test('unknown routes return a branded 404 with a way back', async ({
+  page,
+}) => {
+  const response = await page.goto('/nie-ma-takiej-strony');
   expect(response?.status()).toBe(404);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("404");
-  await expect(page.getByRole("link", { name: "Strona główna" }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('404');
+  await expect(
+    page.getByRole('link', { name: 'Strona główna' }).first()
+  ).toBeVisible();
 });
 
-test("the privacy policy route exists and is marked as a draft", async ({ page }) => {
-  await page.goto("/privacy-policy");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Polityka prywatności",
+test('the privacy policy route exists and is marked as a draft', async ({
+  page,
+}) => {
+  await page.goto('/privacy-policy');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(
+    'Polityka prywatności'
   );
-  await expect(page.getByTestId("legal-draft-notice")).toBeVisible();
+  await expect(page.getByTestId('legal-draft-notice')).toBeVisible();
 });
 ```
 
@@ -2622,7 +2753,7 @@ Expected: FAIL on both.
 `src/app/not-found.tsx`:
 
 ```tsx
-import Link from "next/link";
+import Link from 'next/link';
 
 export default function NotFound() {
   return (
@@ -2635,8 +2766,8 @@ export default function NotFound() {
           404. Nie znaleźliśmy tej strony.
         </h1>
         <p className="mx-auto max-w-[52ch] text-muted">
-          Adres mógł się zmienić albo zawierać literówkę. Poniżej znajdziesz najważniejsze
-          sekcje serwisu.
+          Adres mógł się zmienić albo zawierać literówkę. Poniżej znajdziesz
+          najważniejsze sekcje serwisu.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3.5">
           <Link
@@ -2663,12 +2794,12 @@ export default function NotFound() {
 `src/app/privacy-policy/page.tsx`:
 
 ```tsx
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Polityka prywatności",
+  title: 'Polityka prywatności',
   robots: { index: false, follow: false },
-  alternates: { canonical: "/privacy-policy" },
+  alternates: { canonical: '/privacy-policy' },
 };
 
 export default function PrivacyPage() {
@@ -2691,9 +2822,9 @@ export default function PrivacyPage() {
           Dokument w przygotowaniu
         </p>
         <p className="mt-2 text-muted">
-          Treść polityki prywatności oraz informacja RODO zostaną opublikowane przed
-          uruchomieniem formularza konsultacyjnego. W sprawach dotyczących danych
-          osobowych prosimy o kontakt bezpośredni.
+          Treść polityki prywatności oraz informacja RODO zostaną opublikowane
+          przed uruchomieniem formularza konsultacyjnego. W sprawach dotyczących
+          danych osobowych prosimy o kontakt bezpośredni.
         </p>
       </div>
     </main>
@@ -2722,11 +2853,13 @@ git commit -m "feat: add custom 404 and privacy-policy placeholder route"
 Closes the brief's section 7 SEO gaps.
 
 **Files:**
+
 - Modify: `src/app/layout.tsx`, `src/app/page.tsx`
 - Create: `src/app/icon.svg`, `src/app/sitemap.ts`, `src/app/robots.ts`
 - Test: `tests/e2e/metadata.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `site` (Task 3).
 - Produces: `metadataBase`, per-page `title` and `description`, canonical URLs, Open Graph tags, favicon, `/sitemap.xml`, `/robots.txt`.
 
@@ -2735,36 +2868,38 @@ Closes the brief's section 7 SEO gaps.
 `tests/e2e/metadata.spec.ts`:
 
 ```ts
-import { expect, test } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
-test("the home page carries title, description, canonical and OG tags", async ({ page }) => {
-  await page.goto("/");
+test('the home page carries title, description, canonical and OG tags', async ({
+  page,
+}) => {
+  await page.goto('/');
   await expect(page).toHaveTitle(/Hanna Khudziakova/);
 
   const description = page.locator('meta[name="description"]');
-  await expect(description).toHaveAttribute("content", /ubezpiecze/i);
+  await expect(description).toHaveAttribute('content', /ubezpiecze/i);
 
   await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
   await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);
   await expect(page.locator('meta[property="og:type"]')).toHaveAttribute(
-    "content",
-    "website",
+    'content',
+    'website'
   );
 });
 
-test("a favicon is served", async ({ request }) => {
-  const res = await request.get("/icon.svg");
+test('a favicon is served', async ({ request }) => {
+  const res = await request.get('/icon.svg');
   expect(res.status()).toBe(200);
 });
 
-test("sitemap and robots are generated", async ({ request }) => {
-  const sitemap = await request.get("/sitemap.xml");
+test('sitemap and robots are generated', async ({ request }) => {
+  const sitemap = await request.get('/sitemap.xml');
   expect(sitemap.status()).toBe(200);
-  expect(await sitemap.text()).toContain("/about-me");
+  expect(await sitemap.text()).toContain('/about-me');
 
-  const robots = await request.get("/robots.txt");
+  const robots = await request.get('/robots.txt');
   expect(robots.status()).toBe(200);
-  expect(await robots.text()).toContain("Sitemap:");
+  expect(await robots.text()).toContain('Sitemap:');
 });
 ```
 
@@ -2785,10 +2920,10 @@ export const metadata: Metadata = {
     template: `%s - ${site.name}`,
   },
   description: site.description,
-  alternates: { canonical: "/" },
+  alternates: { canonical: '/' },
   openGraph: {
-    type: "website",
-    locale: "pl_PL",
+    type: 'website',
+    locale: 'pl_PL',
     siteName: site.name,
     title: `${site.name} - ${site.role}`,
     description: site.description,
@@ -2802,10 +2937,10 @@ Add the import: `import { site } from "@/content/site";`
 Add a page-level override in `src/app/page.tsx`:
 
 ```tsx
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  alternates: { canonical: '/' },
 };
 ```
 
@@ -2827,8 +2962,8 @@ This is a monogram wordmark, which is the one case the brief's iconography rule 
 `src/app/sitemap.ts`:
 
 ```ts
-import type { MetadataRoute } from "next";
-import { site } from "@/content/site";
+import type { MetadataRoute } from 'next';
+import { site } from '@/content/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -2841,12 +2976,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
 `src/app/robots.ts`:
 
 ```ts
-import type { MetadataRoute } from "next";
-import { site } from "@/content/site";
+import type { MetadataRoute } from 'next';
+import { site } from '@/content/site';
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: "/privacy-policy" }],
+    rules: [{ userAgent: '*', allow: '/', disallow: '/privacy-policy' }],
     sitemap: `${site.baseUrl}/sitemap.xml`,
   };
 }
@@ -2882,10 +3017,12 @@ git commit -m "feat: add metadata, favicon, sitemap and robots"
 Encodes the brief's 14-row regression guard plus its mechanical counts as executable assertions, so the deferred design phase cannot silently undo them.
 
 **Files:**
+
 - Create: `tests/e2e/regression-guard.spec.ts`
 - Test: itself
 
 **Interfaces:**
+
 - Consumes: every route from Tasks 6 to 13.
 - Produces: nothing importable; a gate.
 
@@ -2894,33 +3031,37 @@ Encodes the brief's 14-row regression guard plus its mechanical counts as execut
 `tests/e2e/regression-guard.spec.ts`:
 
 ```ts
-import { expect, test } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
-const ROUTES = ["/", "/about-me"] as const;
+const ROUTES = ['/', '/about-me'] as const;
 
 for (const route of ROUTES) {
-  test(`${route}: zero em-dashes and en-dashes in visible text`, async ({ page }) => {
+  test(`${route}: zero em-dashes and en-dashes in visible text`, async ({
+    page,
+  }) => {
     await page.goto(route);
-    const text = await page.locator("body").innerText();
+    const text = await page.locator('body').innerText();
     const offenders = text
-      .split("\n")
-      .filter((line) => line.includes("—") || line.includes("–"));
+      .split('\n')
+      .filter((line) => line.includes('—') || line.includes('–'));
     expect(offenders).toEqual([]);
   });
 
   test(`${route}: semantic landmarks present`, async ({ page }) => {
     await page.goto(route);
-    await expect(page.locator("header")).toHaveCount(1);
-    await expect(page.locator("nav")).not.toHaveCount(0);
-    await expect(page.locator("main")).toHaveCount(1);
-    await expect(page.locator("footer")).toHaveCount(1);
+    await expect(page.locator('header')).toHaveCount(1);
+    await expect(page.locator('nav')).not.toHaveCount(0);
+    await expect(page.locator('main')).toHaveCount(1);
+    await expect(page.locator('footer')).toHaveCount(1);
   });
 
-  test(`${route}: no inline style attributes authored in markup`, async ({ page }) => {
+  test(`${route}: no inline style attributes authored in markup`, async ({
+    page,
+  }) => {
     await page.goto(route);
     // Motion writes inline styles at runtime, so only check elements outside
     // its tree: count the attribute on links and images.
-    const count = await page.locator("a[style], img[style]").count();
+    const count = await page.locator('a[style], img[style]').count();
     expect(count).toBe(0);
   });
 
@@ -2929,25 +3070,28 @@ for (const route of ROUTES) {
     expect(await page.locator('a[href="#"], a[href=""]').count()).toBe(0);
   });
 
-  test(`${route}: every image has non-empty alt or is aria-hidden`, async ({ page }) => {
+  test(`${route}: every image has non-empty alt or is aria-hidden`, async ({
+    page,
+  }) => {
     await page.goto(route);
-    const bad = await page.evaluate(() =>
-      [...document.images].filter(
-        (img) =>
-          img.getAttribute("aria-hidden") !== "true" &&
-          !(img.getAttribute("alt") ?? "").trim(),
-      ).length,
+    const bad = await page.evaluate(
+      () =>
+        [...document.images].filter(
+          (img) =>
+            img.getAttribute('aria-hidden') !== 'true' &&
+            !(img.getAttribute('alt') ?? '').trim()
+        ).length
     );
     expect(bad).toBe(0);
   });
 
   test(`${route}: no image fails to load`, async ({ page }) => {
     await page.goto(route);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState('networkidle');
     const broken = await page.evaluate(() =>
       [...document.images]
         .filter((img) => !img.complete || img.naturalWidth === 0)
-        .map((img) => img.currentSrc || img.src),
+        .map((img) => img.currentSrc || img.src)
     );
     expect(broken).toEqual([]);
   });
@@ -2957,10 +3101,10 @@ for (const route of ROUTES) {
     const max = await page.evaluate(() =>
       Math.max(
         0,
-        ...[...document.querySelectorAll("*")]
+        ...[...document.querySelectorAll('*')]
           .map((el) => Number.parseInt(getComputedStyle(el).zIndex, 10))
-          .filter((n) => Number.isFinite(n)),
-      ),
+          .filter((n) => Number.isFinite(n))
+      )
     );
     expect(max).toBeLessThanOrEqual(100);
   });
@@ -2969,11 +3113,12 @@ for (const route of ROUTES) {
     await page.goto(route);
     const found = await page.evaluate(() => {
       const offenders: string[] = [];
-      for (const el of document.querySelectorAll("*")) {
+      for (const el of document.querySelectorAll('*')) {
         const s = getComputedStyle(el);
-        if (s.backgroundColor === "rgb(0, 0, 0)") offenders.push("pure-black-bg");
-        if (s.height === `${window.innerHeight}px` && s.minHeight === "100vh") {
-          offenders.push("100vh");
+        if (s.backgroundColor === 'rgb(0, 0, 0)')
+          offenders.push('pure-black-bg');
+        if (s.height === `${window.innerHeight}px` && s.minHeight === '100vh') {
+          offenders.push('100vh');
         }
       }
       return offenders;
@@ -2981,71 +3126,81 @@ for (const route of ROUTES) {
     expect(found).toEqual([]);
   });
 
-  test(`${route}: keyboard focus is visible on the first link`, async ({ page }) => {
+  test(`${route}: keyboard focus is visible on the first link`, async ({
+    page,
+  }) => {
     await page.goto(route);
-    await page.keyboard.press("Tab");
+    await page.keyboard.press('Tab');
     const outline = await page.evaluate(() => {
       const el = document.activeElement;
       if (!el) return null;
       const s = getComputedStyle(el);
       return { width: s.outlineWidth, style: s.outlineStyle };
     });
-    expect(outline?.style).not.toBe("none");
-    expect(outline?.width).not.toBe("0px");
+    expect(outline?.style).not.toBe('none');
+    expect(outline?.width).not.toBe('0px');
   });
 }
 
-test("skip link is the first tab stop and targets main content", async ({ page }) => {
-  await page.goto("/");
-  await page.keyboard.press("Tab");
-  const text = await page.evaluate(() => document.activeElement?.textContent?.trim());
-  expect(text).toBe("Przejdź do treści");
+test('skip link is the first tab stop and targets main content', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.keyboard.press('Tab');
+  const text = await page.evaluate(() =>
+    document.activeElement?.textContent?.trim()
+  );
+  expect(text).toBe('Przejdź do treści');
 });
 
-test("public anchor targets all exist on the home page", async ({ page }) => {
-  await page.goto("/");
-  for (const id of ["top", "how-it-works", "services", "partners", "contact"]) {
+test('public anchor targets all exist on the home page', async ({ page }) => {
+  await page.goto('/');
+  for (const id of ['top', 'how-it-works', 'services', 'partners', 'contact']) {
     await expect(page.locator(`#${id}`), `#${id}`).toHaveCount(1);
   }
 });
 
-test("nav labels are unchanged", async ({ page }) => {
-  await page.goto("/");
-  const nav = page.locator("header nav");
+test('nav labels are unchanged', async ({ page }) => {
+  await page.goto('/');
+  const nav = page.locator('header nav');
   for (const label of [
-    "Strona główna",
-    "Poznaj Hannę",
-    "Usługi",
-    "Partnerzy",
-    "Bezpłatna konsultacja",
+    'Strona główna',
+    'Poznaj Hannę',
+    'Usługi',
+    'Partnerzy',
+    'Bezpłatna konsultacja',
   ]) {
-    await expect(nav.getByRole("link", { name: label })).toHaveCount(1);
+    await expect(nav.getByRole('link', { name: label })).toHaveCount(1);
   }
 });
 
-test("current page is marked in the nav", async ({ page }) => {
-  await page.goto("/about-me");
-  await expect(page.locator('header nav a[aria-current="page"]')).toHaveCount(1);
+test('current page is marked in the nav', async ({ page }) => {
+  await page.goto('/about-me');
+  await expect(page.locator('header nav a[aria-current="page"]')).toHaveCount(
+    1
+  );
 });
 
-test("at most one marquee on the page", async ({ page }) => {
-  await page.goto("/");
+test('at most one marquee on the page', async ({ page }) => {
+  await page.goto('/');
   const marquees = await page.evaluate(
     () =>
-      [...document.querySelectorAll("*")].filter((el) =>
-        getComputedStyle(el).animationName.includes("marquee"),
-      ).length,
+      [...document.querySelectorAll('*')].filter((el) =>
+        getComputedStyle(el).animationName.includes('marquee')
+      ).length
   );
   expect(marquees).toBeLessThanOrEqual(1);
 });
 
-test("no animation targets a non-GPU property", async ({ page }) => {
-  await page.goto("/");
+test('no animation targets a non-GPU property', async ({ page }) => {
+  await page.goto('/');
   const offenders = await page.evaluate(() => {
-    const banned = ["height", "width", "top", "left", "margin", "padding"];
+    const banned = ['height', 'width', 'top', 'left', 'margin', 'padding'];
     const out: string[] = [];
-    for (const el of document.querySelectorAll("*")) {
-      const props = getComputedStyle(el).transitionProperty.split(",").map((p) => p.trim());
+    for (const el of document.querySelectorAll('*')) {
+      const props = getComputedStyle(el)
+        .transitionProperty.split(',')
+        .map((p) => p.trim());
       for (const p of props) {
         if (banned.includes(p)) out.push(`${el.tagName}:${p}`);
       }
@@ -3055,28 +3210,30 @@ test("no animation targets a non-GPU property", async ({ page }) => {
   expect(offenders).toEqual([]);
 });
 
-test("reduced motion keeps content visible and stops the marquee", async ({ browser }) => {
-  const context = await browser.newContext({ reducedMotion: "reduce" });
+test('reduced motion keeps content visible and stops the marquee', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ reducedMotion: 'reduce' });
   const page = await context.newPage();
-  await page.goto("/");
+  await page.goto('/');
 
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   const opacity = await page
-    .getByRole("heading", { level: 1 })
+    .getByRole('heading', { level: 1 })
     .evaluate((el) => getComputedStyle(el).opacity);
   expect(Number(opacity)).toBeGreaterThan(0.9);
 
   await context.close();
 });
 
-test("content is visible with JavaScript disabled", async ({ browser }) => {
+test('content is visible with JavaScript disabled', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await page.goto("/");
+  await page.goto('/');
 
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByText("Wybierz temat")).toBeVisible();
-  await expect(page.locator("#partners")).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByText('Wybierz temat')).toBeVisible();
+  await expect(page.locator('#partners')).toBeVisible();
 
   await context.close();
 });
@@ -3088,6 +3245,7 @@ The last test is the one that would have caught the legacy `.reveal { opacity: 0
 
 Run: `npm run test:e2e -- regression-guard.spec.ts`
 Expected: all pass. Two likely genuine failures and their meanings:
+
 - `no animation targets a non-GPU property` failing means a `transition-property` regressed to `all` or to a layout property somewhere.
 - `content is visible with JavaScript disabled` failing means a Motion `initial` state is hiding server-rendered content; the fix is in `src/components/Reveal.tsx`, not in the test.
 
@@ -3105,10 +3263,12 @@ git commit -m "test: encode the design brief regression guard as e2e assertions"
 The migration's acceptance criterion. Only after parity is confirmed do the old files go.
 
 **Files:**
+
 - Delete: `index.html`, `poznaj-hanne.html`, `styles.css`, `script.js`
 - Modify: `README.md`, `DESIGN-BRIEF.md`
 
 **Interfaces:**
+
 - Consumes: everything.
 - Produces: a repo whose only site implementation is the Next app.
 
@@ -3139,6 +3299,7 @@ kill %1
 - [ ] **Step 3: Compare and record deviations**
 
 Open the three pairs side by side. Expected, intended deviations, all traceable to a retire item:
+
 - hero has no 17 / 9 / 1 stat strip (retire item 6)
 - marquee sits below the hero's background band rather than inside it (item 7)
 - service icons are Phosphor glyphs, not emoji (item 10)
@@ -3169,7 +3330,7 @@ git rm index.html poznaj-hanne.html styles.css script.js
 
 Replace `README.md` with:
 
-```markdown
+````markdown
 # hanna-insurances
 
 Marketing site for an insurance and finance advisor (Hanna Khudziakova, Zielona Góra).
@@ -3181,6 +3342,7 @@ Next.js 15 (App Router) + Tailwind v4. Page copy is in Polish; code and docs are
 npm install
 npm run dev
 ```
+````
 
 ## Scripts
 
@@ -3205,7 +3367,8 @@ All page copy lives in `src/content/`, never inline in markup.
 
 Migration off the vanilla implementation is complete. Design work is deliberately
 deferred until after the migration; see `DESIGN-BRIEF.md` sections 4 and 8.
-```
+
+````
 
 - [ ] **Step 7: Mark the completed retire items in the brief**
 
@@ -3216,9 +3379,20 @@ In `DESIGN-BRIEF.md` section 4, tick the boxes for items 2, 4, 7, 10, 11, 16, 17
 ```bash
 git add -A
 git commit -m "refactor: retire the vanilla implementation after verifying parity"
-```
+````
 
 ---
+
+<<<<<<< HEAD
+
+### Task 16: moved out of this plan
+
+Cookie consent (retire item 27) was added here on 2026-08-25 and moved out on 2026-08-28,
+by user decision. It is not migration work: nothing in the legacy site did this, so there is
+nothing to port. It is tracked as a separate feature, and its full scope and both blockers
+are recorded in `DESIGN-BRIEF.md` section 8.3.
+
+# **This plan is complete at 15 tasks.**
 
 ### Task 16: Cookie consent and the cookie section of the privacy policy
 
@@ -3254,28 +3428,30 @@ owned it. It is recorded here so it cannot be lost again.
 guess at what the widget sets would have to be rewritten once the real thing arrives, and a
 consent record that does not match the actual cookies is worse than none.
 
+> > > > > > > main
+
 ---
 
 ## Self-Review
 
 **1. Spec coverage.** Every `DESIGN-BRIEF.md` section maps to a task:
 
-| Brief section | Covered by |
-|---|---|
-| 1 Locked decisions (design read, dials, mode) | Recorded as constraints; dials govern the deferred design phase, not this plan |
-| 2 Preserve (anchors, nav labels, copy voice, a11y wins) | Task 3 tests, Task 14 |
-| 2 Requires approval (URL change) | Global Constraints, gate on Task 11 |
-| 3 Token inventory | Task 2 |
-| 4 Retire items, in-scope subset | Tasks 4, 6, 7, 8, 10, 12, 13 as listed in the scoping section |
-| 4 Regression guard, 14 rows | Task 14 |
-| 5 Keep (journey, split hero, copy voice) | Tasks 6, 7 port them faithfully |
-| 6 Known filler (17/9/1 three times) | Partly: Task 6 drops the hero copy of it, reducing three placements to two. Full consolidation is a design-phase call, deliberately not forced here. |
-| 7 SEO baseline | Task 13 |
-| 8.1 Single accent | Not addressed by design. Both colors ship as tokens in Task 2 so the later choice is a token edit. |
-| 8.2 Display typeface | Not addressed by design. Task 2 Step 4 performs the diacritic verification the brief flagged as missing. |
-| 8.3 Blocked assets and copy | Tasks 6, 10, 11 leave labeled TODO slots; Task 13 Step 7 adds the domain blocker. |
-| 9 Carried-over items | Task 5 (JS-invisible content), Task 5 plus Task 14 (reduced motion done as degrade-to-static) |
-| 10 Out of scope | Honored; the animation-plan work stays deferred |
+| Brief section                                           | Covered by                                                                                                                                           |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Locked decisions (design read, dials, mode)           | Recorded as constraints; dials govern the deferred design phase, not this plan                                                                       |
+| 2 Preserve (anchors, nav labels, copy voice, a11y wins) | Task 3 tests, Task 14                                                                                                                                |
+| 2 Requires approval (URL change)                        | Global Constraints, gate on Task 11                                                                                                                  |
+| 3 Token inventory                                       | Task 2                                                                                                                                               |
+| 4 Retire items, in-scope subset                         | Tasks 4, 6, 7, 8, 10, 12, 13 as listed in the scoping section                                                                                        |
+| 4 Regression guard, 14 rows                             | Task 14                                                                                                                                              |
+| 5 Keep (journey, split hero, copy voice)                | Tasks 6, 7 port them faithfully                                                                                                                      |
+| 6 Known filler (17/9/1 three times)                     | Partly: Task 6 drops the hero copy of it, reducing three placements to two. Full consolidation is a design-phase call, deliberately not forced here. |
+| 7 SEO baseline                                          | Task 13                                                                                                                                              |
+| 8.1 Single accent                                       | Not addressed by design. Both colors ship as tokens in Task 2 so the later choice is a token edit.                                                   |
+| 8.2 Display typeface                                    | Not addressed by design. Task 2 Step 4 performs the diacritic verification the brief flagged as missing.                                             |
+| 8.3 Blocked assets and copy                             | Tasks 6, 10, 11 leave labeled TODO slots; Task 13 Step 7 adds the domain blocker.                                                                    |
+| 9 Carried-over items                                    | Task 5 (JS-invisible content), Task 5 plus Task 14 (reduced motion done as degrade-to-static)                                                        |
+| 10 Out of scope                                         | Honored; the animation-plan work stays deferred                                                                                                      |
 
 **Gap accepted deliberately:** brief section 6's filler consolidation is only partly done, and retire items 3, 5, 6 (partly), 8, 9, 12, 13, 14, 15, 19, 23, 24 are untouched. All are aesthetic or blocked, per the scoping section. Item 1 is blocked on the real Lendi embed code.
 
@@ -3311,5 +3487,6 @@ Plan complete. Two execution options:
 **2. Inline Execution** - execute tasks in this session with checkpoints for review.
 
 Two gates must clear before Task 1 starts:
+
 - **Next.js versus Vite + React** (see the assumption note at the top).
 - **The `/about-me` URL change** (Global Constraints), needed before Task 11.
