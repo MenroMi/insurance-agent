@@ -1,49 +1,20 @@
-# Strona główna — etap 1
+# hanna-insurances
 
-Nowa wersja strony głównej przygotowana na bazie kierunku `insurance-advisor-premium`.
+Marketing site for an insurance and finance advisor (Hanna Khudziakova, Zielona Góra).
+Next.js 15 (App Router) + Tailwind v4. Page copy is in Polish; code and docs are in English.
 
-## Najważniejsza zmiana
-
-Usunięto sztuczny dashboard i fikcyjne dane typu „68% bezpieczeństwa”.
-
-Nowy hero wykorzystuje:
-- imię i nazwisko doradcy,
-- lokalizację,
-- informację o bezpłatnej konsultacji,
-- realny zakres współpracy: 17 firm ubezpieczeniowych i 9 banków,
-- jasny proces: analiza potrzeb → porównanie dostępnych rozwiązań,
-- miejsce na profesjonalne zdjęcie.
-
-## Strona zawiera obecnie
-
-- nowy hero,
-- sekcję „O doradcy”,
-- zakres usług,
-- proces współpracy,
-- partnerów,
-- podgląd miejsca na widget Lendi,
-- stopkę.
-
-## Do podmiany
-
-- profesjonalne zdjęcia,
-- telefon i e-mail,
-- dokładny tytuł zawodowy,
-- logotypy partnerów,
-- oficjalny kod widgetu Lendi,
-- finalna paleta kolorów,
-- treści prawne.
-
-## Uruchomienie
-
-Otwórz `index.html` lub uruchom:
+## Getting started
 
 ```bash
-python3 -m http.server 8080
+npm install
+npm run dev
 ```
 
+Node 24.17.0 and npm 11.13.0, pinned in `engines` and `.nvmrc`. Every dependency version
+is exact: no `^`, no `~`. `.npmrc` sets `save-exact=true`, so `npm install <pkg>` pins
+automatically.
 
-## Wersja v3
+## Scripts
 
 - `npm run dev` - development server
 - `npm run build` - production build
@@ -60,12 +31,12 @@ dev server starts serving a webpack runtime error. Stop dev, `rm -rf .next`, the
 All four are prerendered as static content, alongside `/sitemap.xml`, `/robots.txt` and
 `/icon.svg`.
 
-| Route | Notes |
-| --- | --- |
-| `/` | Hero, partner marquee, journey, services, partners, consultation |
-| `/about-me` | The advisor page |
-| `/privacy-policy` | Placeholder. `noindex` until it carries real text |
-| 404 | `src/app/not-found.tsx` |
+| Route             | Notes                                                            |
+| ----------------- | ---------------------------------------------------------------- |
+| `/`               | Hero, partner marquee, journey, services, partners, consultation |
+| `/about-me`       | The advisor page                                                 |
+| `/privacy-policy` | Placeholder. `noindex` until it carries real text                |
+| 404               | `src/app/not-found.tsx`                                          |
 
 ## Architecture
 

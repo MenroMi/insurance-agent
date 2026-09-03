@@ -1,0 +1,155 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Colors: copied from DESIGN-BRIEF.md section 3 */
+  --color-primary: #2f78b7;
+  --color-primary-strong: #205f96;
+  --color-primary-dark: #173d60;
+  --color-accent: #d1aa68;
+  --color-accent-soft: #f3e5c8;
+  --color-ink: #1d2a39;
+  --color-muted: #68788c;
+  --color-line: #dbe4ec;
+  --color-success: #4a936d;
+  --color-page: #f7f9fc;
+  --color-surface: #ffffff;
+  --color-surface-soft: #edf3f8;
+  --color-surface-blue: #eaf4fb;
+
+  /*
+   * Footer palette, carried over from styles.css lines 701-729. The brief's
+   * section 3 palette never listed these four, so they arrive as tokens rather
+   * than as raw hex in SiteFooter.tsx; the design phase edits them here.
+   */
+  --color-footer: #132f48;
+  --color-footer-muted: #8fa8ba;
+  --color-footer-link: #bed0dd;
+  --color-footer-faint: #7893a6;
+
+  /*
+   * Hero decoration, carried over from styles.css lines 172-283. Same reason as
+   * the footer four: the brief's palette never listed them, and raw hex in the
+   * component would hide them from the design phase.
+   */
+  --color-glow-blue: #b8dff5;
+  --color-glow-gold: #f1dfba;
+  --color-hero-badge-line: #ccdeeb;
+  --color-hero-fineprint: #8190a1;
+
+  /* Journey step tags, from styles.css line 984 */
+  --color-chip-ink: #45627b;
+
+  /* Partner logo tile border, from styles.css line 574 */
+  --color-logo-line: #dce6ed;
+
+  /*
+   * Text on the dark consultation panel, from styles.css lines 607-626. Same
+   * reason as the footer four: never in the brief's palette, so raw hex in the
+   * component would hide them from the design phase. Retire item 8 (theme lock)
+   * decides whether this panel stays dark at all.
+   */
+  --color-consult-body: #bfd0de;
+  --color-consult-list: #d2dee8;
+  --color-consult-label: #89a2b7;
+
+  /*
+   * The /about-me page, from styles.css lines 1064-1096. Same reason as the
+   * footer four: the brief's palette never listed them, so raw hex in the
+   * components would hide them from the design phase.
+   * --color-cta-body repeats the value of --color-footer-link on purpose; the
+   * two are unrelated roles that happen to share a hex today, and the design
+   * phase decides whether they stay equal.
+   */
+  --color-photo-blue: #dcecf7;
+  --color-photo-sand: #efe3d1;
+  --color-tile-label: #8797a8;
+  --color-cta-body: #bed0dd;
+
+  /*
+   * DEFERRED DEBT, must be revisited before launch.
+   * All 12 radius values from the legacy CSS, tokenised but NOT unified.
+   * Kept distinct on purpose so the migration stays visually verifiable against
+   * the Task 15 baseline. DESIGN-BRIEF.md retire item 9 requires collapsing
+   * these to one documented scale during the design phase; tokenising now means
+   * that becomes an edit to this block rather than a sweep through every file.
+   */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 15px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-3xl: 30px;
+  --radius-4xl: 32px;
+  --radius-5xl: 34px;
+  --radius-pill: 999px;
+
+  /* Shadows: tinted with the page hue, never black (regression guard) */
+  --shadow-card: 0 22px 70px rgb(24 61 96 / 0.12);
+  --shadow-card-soft: 0 12px 36px rgb(24 61 96 / 0.07);
+
+  /* Container */
+  --container-site: 1180px;
+
+  /* Marquee under the hero; the strip is rendered twice, so it loops at -50% */
+  --animate-marquee: marquee 26s linear infinite;
+
+  /*
+   * DEFERRED DEBT, must be revisited before launch.
+   * These three faces are carried over from the legacy site ON PURPOSE, so the
+   * migration stays visually verifiable against the Task 15 baseline. They are
+   * NOT the intended final typography.
+   * - Playfair Display as the default display face is unjustified for a
+   *   regulated financial brief; DESIGN-BRIEF.md section 8.2 calls for a sans
+   *   display face instead.
+   * - Three families is one more than the pairings the design skill suggests.
+   * Blocked on: verifying Polish diacritic coverage per candidate face.
+   */
+  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-label: var(--font-manrope), sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* sticky header height (78px) plus breathing room */
+    scroll-padding-top: 96px;
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    line-height: 1.6;
+  }
+
+  /* Retire item 16: visible focus for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid var(--color-primary-dark);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Retire item 20: no orphans in the long Polish headlines */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
