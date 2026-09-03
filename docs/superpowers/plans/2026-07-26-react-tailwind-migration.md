@@ -41,6 +41,8 @@ Two consequences worth stating, because the obvious implementation gets both wro
 
 **Out of scope, deferred to the design phase:** items 1 (Lendi widget, blocked on real embed code), 3 (eyebrow reduction), 5 (3-column cards), 6 (hero recomposition), 8 (theme lock), 9 (radius scale consolidation), 12 (dark mode), 13 (real contacts, blocked), 14 and 15 (photography, blocked on assets), 19 (form states, blocked on item 1), 23 (card look), 24 (button pairing).
 
+**Out of this plan entirely, tracked as a separate feature:** item 27 (cookie consent). Found on 2026-08-25 by an audit: it was the only item in the retire list that neither bucket above covered. It was briefly carried here as Task 16, then moved out by user decision on 2026-08-28, because it adds behaviour the legacy site never had rather than porting anything, and it is blocked on external work with its own release cycle. Its scope and blockers now live in `DESIGN-BRIEF.md` section 8.3.
+
 Item 9 is partially handled: the 12 radius values get encoded as `@theme` tokens so consolidating them later is a token edit, not a sweep.
 
 **Assumption requiring confirmation:** Next.js rather than Vite + React. Rationale: `DESIGN-BRIEF.md` depends on the Metadata API (section 7 SEO gaps), `next/font` (retire item 11, which also removes the Google Fonts CDN data-transfer concern), and `next/image` (items 14 and 15). With Vite this plan changes: add `react-router` and a head-management library, hand-roll `@font-face` self-hosting, drop Tasks 13's metadata approach, and lose static prerendering. **Confirm before starting Task 1.**
@@ -3090,6 +3092,17 @@ In `DESIGN-BRIEF.md` section 4, tick the boxes for items 2, 4, 7, 10, 11, 16, 17
 git add -A
 git commit -m "refactor: retire the vanilla implementation after verifying parity"
 ```
+
+---
+
+### Task 16: moved out of this plan
+
+Cookie consent (retire item 27) was added here on 2026-08-25 and moved out on 2026-08-28,
+by user decision. It is not migration work: nothing in the legacy site did this, so there is
+nothing to port. It is tracked as a separate feature, and its full scope and both blockers
+are recorded in `DESIGN-BRIEF.md` section 8.3.
+
+**This plan is complete at 15 tasks.**
 
 ---
 

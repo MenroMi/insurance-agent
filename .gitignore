@@ -21,3 +21,17 @@ Desktop.ini
 # Logi i pliki tymczasowe
 *.log
 node_modules/
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Testing
+/test-results/
+/playwright-report/
+/blob-report/
+
+# Folders
+/docs/LEARNINGS.md

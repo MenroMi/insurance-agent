@@ -269,7 +269,71 @@ Not design decisions, but they gate "done" in any stack:
 - Legal texts: privacy policy and RODO notice. Required once the Lendi widget starts collecting
   personal data. Also section 11.F treats legal copy as never-silently-changed, so it must be
   authored deliberately.
+- Cookie consent and the cookie section of the privacy policy (retire item 27). Tracked as a
+  **separate feature**, not as migration work: nothing in the legacy site did this, so there is
+  nothing to port. Briefly carried as the plan's Task 16, moved here by user decision on
+  2026-08-28. It was missing from the plan's scoping split entirely until an audit on
+  2026-08-25. Full scope in section 8.5 below. Must not be forgotten before launch.
 - Exact professional title.
+
+---
+
+### 8.5 Cookie consent, as a separate feature
+
+Retire item 27. Held out of the migration plan on purpose: it adds behaviour the legacy site
+never had, so there was nothing to port, and it is blocked on external work with its own
+release cycle.
+
+**Verified blocked, measured 2026-08-28 across all four routes plus interaction (opening the
+mobile nav, scrolling every section):** zero cookies, zero `Set-Cookie` response headers,
+empty `localStorage` and `sessionStorage`, and zero requests to any host other than the app's
+own. Fonts are self-hosted through `next/font` (retire item 11), and there is no analytics.
+
+Two blockers, both external:
+
+1. **The Lendi widget embed code** (retire item 1). This is the gating one. With no
+   non-essential cookie there is nothing to ask consent for, and a banner that appears anyway
+   is the exact dark pattern the RODO guidance warns against. The obligation begins the moment
+   the widget lands, because that is when third-party code starts running. It is also the only
+   thing that can tell us WHAT to declare: a consent record that does not match the actual
+   cookies is worse than none.
+2. **The legal text.** The cookie section of the privacy policy is legal copy and must be
+   written or approved by a human; section 11.F forbids generating or silently changing it.
+   `/privacy-policy` ships as an explicitly labeled placeholder for this reason.
+
+**Scope when unblocked:**
+
+- A consent **gate**, not a banner: consent must block the widget from loading, rather than
+  appear over third-party code that has already run. A banner shown after the fact is
+  legally useless.
+- Consent must be as easy to refuse as to accept, and revocable afterwards.
+- The stored decision and how long it lasts. `localStorage` is legitimate here: the consent
+  record itself is strictly necessary, so it needs no consent of its own.
+- The cookie section of `/privacy-policy`: what each cookie is, who sets it, how long it
+  lives. Human-authored.
+- Remove `robots: { index: false }` from the privacy route once it carries real content.
+
+**Library decision, researched 2026-08-28.** Recommendation: build it in house, roughly fifty
+lines, a client wrapper around the Lendi slot plus a revoke link in the footer. Reasons
+specific to this project: exactly one third-party vendor will ever appear, so the category
+management that libraries sell is weight with nothing to manage; the visual direction is
+locked and a vendor banner arrives with its own styling to override; and it adds no
+dependency surface, which matters here after the `sharp` advisory.
+
+Evaluated and rejected, with the registry data behind each:
+
+| Candidate | Version | Licence | Why not |
+| --- | --- | --- | --- |
+| `klaro` | 0.7.21 | BSD-3 | declares `sass`, `webpack` and `@babel/eslint-parser` among its dependencies |
+| `react-cookie-consent` | 10.0.2 | MIT | banner UI only; it does not gate script loading, which is the actual requirement |
+| `js-cookie` | 3.0.8 | MIT | a `document.cookie` wrapper, no consent logic at all |
+| Hosted CMPs (Cookiebot, Usercentrics, iubenda) | n/a | commercial | they load a third-party script themselves, to manage a third party. Also paid, and they need the domain that section 8.3 is still waiting on |
+
+`vanilla-cookieconsent` 3.1.0 (MIT, no dependencies, Polish locale, supports blocking) is the
+one candidate worth revisiting if the preference shifts to leaning on maintained compliance
+logic rather than owning it. Note its blocking works through `data-category` attributes on
+raw `<script>` tags, while the widget will be a React component, so some wiring is manual
+either way.
 
 ---
 
