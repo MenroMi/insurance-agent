@@ -18,13 +18,37 @@ automatically.
 
 - `npm run dev` - development server
 - `npm run build` - production build
-- `npm start` - serve the production build
+- `npm start` - serve the exported site from `out/`, the way Cloudflare does
 - `npm test` - unit tests (Vitest)
 - `npm run test:e2e` - end-to-end tests and the regression guard (Playwright)
 - `npm run format` - Prettier over `src/`
 
 Do not run `npm run build` while a dev server is up: both write `.next`, and the running
 dev server starts serving a webpack runtime error. Stop dev, `rm -rf .next`, then build.
+
+`next start` is gone: the site is a static export (`output: 'export'`), and there is no
+server to start. `npm start` runs `scripts/serveStatic.mjs`, a stand-in that imitates the
+asset routing of Cloudflare Workers until a Wrangler config exists and `wrangler dev` can
+replace it - `/about-me` serves `about-me.html`, a miss serves
+`404.html` with status 404. Playwright uses the same script, so the end-to-end suite runs
+against what production ships rather than against `next dev`.
+
+It serves `out/` as it stands and never builds: run `npm run build` first, and again after
+any source change. It prints the address it is listening on, refuses to start when `out/`
+is absent, and names the port when one is already taken. `PORT` and `STATIC_ROOT` override
+the defaults.
+
+### Environment
+
+`NEXT_PUBLIC_SITE_URL` sets the origin used for canonical URLs, Open Graph and the
+sitemap. It is read at **build** time - `next build` inlines it, and a static export has
+no run time - so it belongs in the build variables of the deployment, not in a runtime
+config. Unset, it falls back to `https://example.invalid`, which also keeps structured
+data switched off (`src/lib/structuredData.ts`).
+
+`robots.txt` invites crawlers only when that origin's host matches `site.productionHost`.
+A forgotten or mistyped variable therefore produces `Disallow: /` rather than an indexed
+staging copy.
 
 ## Routes
 
