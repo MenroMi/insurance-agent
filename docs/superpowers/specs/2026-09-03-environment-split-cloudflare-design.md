@@ -137,9 +137,9 @@ The working tree was restored afterwards; no changes were left behind.
 
 5. **Playwright** - ~~`tests/e2e` currently expect `next start`~~. Corrected
    during implementation: the config launched `npm run dev`, not `next start`.
-   Moved to `npm run build && node scripts/serveStatic.mjs`, a dependency-free
-   stand-in that reproduces Cloudflare's asset routing. The same script backs
-   `npm start`, because `next start` refuses to run at all under
+   First moved to a hand-written static server, then, once `wrangler.jsonc`
+   existed, to `npm run build && npx wrangler dev --port 3000`. The same runtime
+   backs `npm start`, because `next start` refuses to run at all under
    `output: 'export'`.
 
 6. **Unit tests** - ~~`tests/unit/site-invariants.test.tsx` depends on
@@ -184,14 +184,11 @@ ever published with knowingly wrong canonical URLs.
    `dev.hannainsurance.pl`, set `workers_dev = false`, and set its own
    `NEXT_PUBLIC_SITE_URL` - also a build variable.
 
-   **`scripts/serveStatic.mjs` is deleted here.** It was written as a temporary
-   stand-in: it imitates Cloudflare's asset routing with hardcoded rules, and so
-   can drift away from production silently. Once `wrangler.jsonc` exists,
-   `npm start` and the `webServer` in `playwright.config.ts` move to
-   `wrangler dev`, which runs the real Workers runtime against the real config.
-   Wrangler becomes a dependency of this project by then in any case, so owning
-   an implementation stops paying for itself: 74 lines of code and 93 lines of
-   tests against a dependency already bought.
+   ~~`scripts/serveStatic.mjs` is deleted here.~~ Done 2026-09-07, ahead of this
+   step: wrangler is pinned at 4.129.0 in `devDependencies`, `npm start` and the
+   Playwright `webServer` run `wrangler dev`, and the stand-in and its three
+   tests are gone. Verified against the real runtime: all six routes answer with
+   the statuses and content types the imitation produced, including the 404.
 
    Both Workers need `not_found_handling = "404-page"` in the Wrangler config.
    The default, `"none"`, answers with a bare bodyless 404, while

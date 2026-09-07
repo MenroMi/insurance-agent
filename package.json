@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node scripts/serveStatic.mjs",
+    "start": "wrangler dev --port 3000",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -40,7 +40,8 @@
     "postcss": "8.5.23",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.10",
+    "wrangler": "4.129.0"
   },
   "private": true
 }

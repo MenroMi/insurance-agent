@@ -25,6 +25,9 @@ node_modules/
 # Next.js
 /.next/
 /out/
+
+# wrangler dev local state (workerd cache, local KV/R2, session data)
+/.wrangler/
 next-env.d.ts
 tsconfig.tsbuildinfo
 
