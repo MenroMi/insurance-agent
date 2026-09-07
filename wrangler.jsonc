@@ -1,0 +1,56 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+
+  // Two Workers, one repository. The top level IS production; `env.dev` is the
+  // closed staging copy. Deploys are `wrangler deploy` and
+  // `wrangler deploy --env dev` respectively, which is what each Worker's
+  // Workers Builds trigger runs.
+  //
+  // There is no `main`: nothing here runs code. The site is a static export
+  // (`output: 'export'` in next.config.ts) and the Worker only serves files.
+  //
+  // NEXT_PUBLIC_SITE_URL is deliberately NOT here. It is inlined by
+  // `next build` before this config is ever read, so it belongs to the build
+  // variables of each Workers Builds trigger. `vars` in this file would be
+  // runtime values that the exported HTML can never see.
+
+  "name": "hanna-prod",
+  "compatibility_date": "2026-09-07",
+
+  "assets": {
+    "directory": "./out",
+    // "none", the default, answers an unknown path with a bodyless 404.
+    // tests/e2e/routes.spec.ts asserts the branded page with a way back, and
+    // src/app/not-found.tsx is exported as 404.html to serve it.
+    "not_found_handling": "404-page"
+  },
+
+  // The load-bearing line of the entire hosting decision. Left true, each
+  // Worker also answers on <name>.workers.dev, which bypasses the Cloudflare
+  // proxy and therefore bypasses Access. Preview URLs follow this setting.
+  "workers_dev": false,
+
+  "routes": [
+    { "pattern": "hannainsurance.pl", "custom_domain": true },
+    { "pattern": "www.hannainsurance.pl", "custom_domain": true }
+  ],
+
+  "env": {
+    "dev": {
+      "name": "hanna-dev",
+
+      // Repeated rather than inherited on purpose: an environment that
+      // silently inherited `workers_dev` would be one edit away from being
+      // publicly reachable, and that edit would look harmless at the top level.
+      "workers_dev": false,
+      "preview_urls": false,
+
+      "assets": {
+        "directory": "./out",
+        "not_found_handling": "404-page"
+      },
+
+      "routes": [{ "pattern": "dev.hannainsurance.pl", "custom_domain": true }]
+    }
+  }
+}
