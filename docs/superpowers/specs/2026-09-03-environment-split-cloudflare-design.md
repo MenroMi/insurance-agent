@@ -179,7 +179,22 @@ ever published with knowingly wrong canonical URLs.
    hosting.
 7. Create Worker `hanna-prod`, production branch `main`, bind
    `hannainsurance.pl` and `www`, set `NEXT_PUBLIC_SITE_URL` **as a build
-   variable** (see item 3 of section 5).
+   variable** (see item 3 of section 5). Build command `npm run build`, deploy
+   command `npx wrangler deploy` - no `--env` flag, the top level of the config
+   is production. Leave "Builds for non-production branches" off.
+
+   **Merge `develop` into `main` first.** `main` does not carry `wrangler.jsonc`,
+   and a Worker built from a branch without it does not fail with a missing-file
+   error: wrangler falls back to scaffolding a project, detects Next.js, answers
+   its own prompts with `yes` in a non-interactive build, and runs
+   `@opennextjs/cloudflare migrate`. The build then dies on
+   `ENOENT .next/standalone/.next/server/pages-manifest.json` - an adapter for
+   server-rendered Next failing on a static export, which points at everything
+   except the cause. Cost one build on 2026-09-07, on dev, before the branch was
+   switched.
+
+   **Deferred on 2026-09-07 by the user**, after dev came up. Everything else in
+   section 6 is done.
 8. Create Worker `hanna-dev`, production branch `develop`, bind
    `dev.hannainsurance.pl`, set `workers_dev = false`, and set its own
    `NEXT_PUBLIC_SITE_URL` - also a build variable.
@@ -195,8 +210,17 @@ ever published with knowingly wrong canonical URLs.
    `tests/e2e/routes.spec.ts` requires the branded page with status 404. Found
    while moving the end-to-end suite onto static serving.
 9. Zero Trust → Access → Applications → Self-hosted on `dev.hannainsurance.pl`.
-   Policy: Action `Allow`, selector `Emails`, a list of addresses. The provider
-   is the built-in One-time PIN. Every Access application is deny by default.
+   Policy: Action `Allow`, selector `Emails`, a list of addresses. Every Access
+   application is deny by default.
+
+   **One-time PIN is not automatic - add it first.** This spec's first draft
+   called it "the built-in provider", which is no longer true: new Zero Trust
+   organizations default to the Cloudflare identity provider, and OTP has to be
+   added explicitly under Zero Trust → Integrations → Identity providers → Add
+   new identity provider → One-time PIN. The difference matters, because it is
+   what decides whether the people you let in need a Cloudflare account. With
+   OTP they do not: they enter their address, select **Send login code**, and
+   use the PIN, which expires after 10 minutes.
 
    **Who gets in is decided and entered by the repository owner, not by an
    agent.** The procedure, when the time comes: Zero Trust → Access →
@@ -204,12 +228,24 @@ ever published with knowingly wrong canonical URLs.
    rule → selector `Emails` → add the address → Save. Starting with one's own
    address alone is fine. The person needs neither a Cloudflare account nor any
    registration: they enter their email, receive a six-digit code and are let
-   in. A policy edit takes effect on the next sign-in - no rebuild, no
-   redeploy. The alternative selector `Emails ending in` (a domain suffix) is
+   in, provided One-time PIN has been added as an identity provider. A policy
+   edit takes effect on the next sign-in - no rebuild, no redeploy. The alternative selector `Emails ending in` (a domain suffix) is
    worth using only once there is mail on `@hannainsurance.pl`.
 10. Check from a private window: `hannainsurance.pl` opens,
     `dev.hannainsurance.pl` asks for a code by email, and dev's `*.workers.dev`
     does not resolve.
+
+    **Verified for dev on 2026-09-07**, from outside the account: `/` and
+    `/sitemap.xml` answer 302 to the Access login page and serve no site
+    content, the canonical is `https://dev.hannainsurance.pl` rather than the
+    production origin, and a miss returns the branded 404. One caveat found in
+    the same pass: `/robots.txt` still answers 200, because Cloudflare's managed
+    robots.txt is served at the edge, ahead of Access, and it carries
+    `User-agent: * / Allow: /`. Our own `Disallow: /` never reaches the crawler
+    on dev. Harmless in practice - a crawler that accepts the invitation still
+    hits the login page - but the second layer of the design is masked there.
+    Disabling managed robots.txt is a zone-wide setting, so it would also remove
+    the AI-crawler restrictions from production, where they are wanted.
 
 ---
 
