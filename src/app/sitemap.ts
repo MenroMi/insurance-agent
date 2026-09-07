@@ -2,6 +2,12 @@ import type { MetadataRoute } from 'next';
 import { site } from '@/content/site';
 
 /*
+ * Required by `output: 'export'`, exactly as in robots.ts: Next 15 will not
+ * guess whether a metadata route is static.
+ */
+export const dynamic = 'force-static';
+
+/*
  * /privacy-policy is deliberately absent: it carries `robots: { index: false }`
  * until it carries real content, and listing a page you are asking not to
  * index contradicts the request. The 404 boundary is not a route and cannot be
