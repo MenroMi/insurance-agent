@@ -27,16 +27,20 @@ Do not run `npm run build` while a dev server is up: both write `.next`, and the
 dev server starts serving a webpack runtime error. Stop dev, `rm -rf .next`, then build.
 
 `next start` is gone: the site is a static export (`output: 'export'`), and there is no
-server to start. `npm start` runs `scripts/serveStatic.mjs`, a stand-in that imitates the
-asset routing of Cloudflare Workers until a Wrangler config exists and `wrangler dev` can
-replace it - `/about-me` serves `about-me.html`, a miss serves
-`404.html` with status 404. Playwright uses the same script, so the end-to-end suite runs
-against what production ships rather than against `next dev`.
+server to start. `npm start` runs `wrangler dev`, which executes the real Cloudflare
+Workers assets runtime over `wrangler.jsonc` - the same config the deployment reads. So
+`/about-me` serving `about-me.html` and a miss serving `404.html` with status 404 are the
+deployed behaviour, not a local approximation of it. Playwright uses the same runtime, so
+the end-to-end suite runs against what production ships rather than against `next dev`.
 
 It serves `out/` as it stands and never builds: run `npm run build` first, and again after
-any source change. It prints the address it is listening on, refuses to start when `out/`
-is absent, and names the port when one is already taken. `PORT` and `STATIC_ROOT` override
-the defaults.
+any source change.
+
+`wrangler.jsonc` describes both Workers - production at the top level, the closed staging
+copy under `env.dev`. `tests/unit/wrangler-config.test.ts` guards the three fields in it
+that silently undo a guarantee proven elsewhere: the asset directory, the 404 handling the
+e2e suite asserts, and `workers_dev`, which is what keeps the staging copy off a public
+`*.workers.dev` address where Cloudflare Access could not reach it.
 
 ### Environment
 
